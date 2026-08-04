@@ -1,0 +1,14 @@
+C:\Users\letho\OneDrive\Desktop\GhostRelay\security-core\target\release\deps\thiserror-5c8cb6917071edf2.d: C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.19\src\lib.rs C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.19\src\aserror.rs C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.19\src\display.rs C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.19\src\var.rs C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.19\src\private.rs C:\Users\letho\OneDrive\Desktop\GhostRelay\security-core\target\release\build\thiserror-e08e9363d7ede3cc\out/private.rs
+
+C:\Users\letho\OneDrive\Desktop\GhostRelay\security-core\target\release\deps\libthiserror-5c8cb6917071edf2.rlib: C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.19\src\lib.rs C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.19\src\aserror.rs C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.19\src\display.rs C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.19\src\var.rs C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.19\src\private.rs C:\Users\letho\OneDrive\Desktop\GhostRelay\security-core\target\release\build\thiserror-e08e9363d7ede3cc\out/private.rs
+
+C:\Users\letho\OneDrive\Desktop\GhostRelay\security-core\target\release\deps\libthiserror-5c8cb6917071edf2.rmeta: C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.19\src\lib.rs C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.19\src\aserror.rs C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.19\src\display.rs C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.19\src\var.rs C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.19\src\private.rs C:\Users\letho\OneDrive\Desktop\GhostRelay\security-core\target\release\build\thiserror-e08e9363d7ede3cc\out/private.rs
+
+C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.19\src\lib.rs:
+C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.19\src\aserror.rs:
+C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.19\src\display.rs:
+C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.19\src\var.rs:
+C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.19\src\private.rs:
+C:\Users\letho\OneDrive\Desktop\GhostRelay\security-core\target\release\build\thiserror-e08e9363d7ede3cc\out/private.rs:
+
+# env-dep:OUT_DIR=C:\\Users\\letho\\OneDrive\\Desktop\\GhostRelay\\security-core\\target\\release\\build\\thiserror-e08e9363d7ede3cc\\out

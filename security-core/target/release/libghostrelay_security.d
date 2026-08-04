@@ -1,0 +1,1 @@
+C:\GhostRelay\security-core\target\release\libghostrelay_security.rlib: C:\GhostRelay\security-core\src\crypto.rs C:\GhostRelay\security-core\src\errors.rs C:\GhostRelay\security-core\src\ffi.rs C:\GhostRelay\security-core\src\identity.rs C:\GhostRelay\security-core\src\lib.rs C:\GhostRelay\security-core\src\message.rs C:\GhostRelay\security-core\src\signatures.rs

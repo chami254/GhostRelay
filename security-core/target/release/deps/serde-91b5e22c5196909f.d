@@ -1,0 +1,14 @@
+C:\Users\letho\OneDrive\Desktop\GhostRelay\security-core\target\release\deps\serde-91b5e22c5196909f.d: C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\lib.rs C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\integer128.rs C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\mod.rs C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\de.rs C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\ser.rs C:\Users\letho\OneDrive\Desktop\GhostRelay\security-core\target\release\build\serde-009d67ca170ca123\out/private.rs
+
+C:\Users\letho\OneDrive\Desktop\GhostRelay\security-core\target\release\deps\libserde-91b5e22c5196909f.rlib: C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\lib.rs C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\integer128.rs C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\mod.rs C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\de.rs C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\ser.rs C:\Users\letho\OneDrive\Desktop\GhostRelay\security-core\target\release\build\serde-009d67ca170ca123\out/private.rs
+
+C:\Users\letho\OneDrive\Desktop\GhostRelay\security-core\target\release\deps\libserde-91b5e22c5196909f.rmeta: C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\lib.rs C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\integer128.rs C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\mod.rs C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\de.rs C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\ser.rs C:\Users\letho\OneDrive\Desktop\GhostRelay\security-core\target\release\build\serde-009d67ca170ca123\out/private.rs
+
+C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\lib.rs:
+C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\integer128.rs:
+C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\mod.rs:
+C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\de.rs:
+C:\Users\letho\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\ser.rs:
+C:\Users\letho\OneDrive\Desktop\GhostRelay\security-core\target\release\build\serde-009d67ca170ca123\out/private.rs:
+
+# env-dep:OUT_DIR=C:\\Users\\letho\\OneDrive\\Desktop\\GhostRelay\\security-core\\target\\release\\build\\serde-009d67ca170ca123\\out

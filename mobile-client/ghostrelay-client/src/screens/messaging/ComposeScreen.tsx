@@ -36,15 +36,16 @@ export default function ComposeScreen() {
   const route =
     useRoute<RouteProp<RootStackParamList, "Compose">>();
 
-  const {
-    receiverId,
-    receiverName,
-    fingerprint,
-  } = route.params;
+    const { contact } = route.params;
+
+    const receiverId = contact.id;
+    const receiverName = contact.name;
+    const fingerprint = contact.fingerprint;
 
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [identity, setIdentity] = useState<any>(null);
+
 
   const MAX_CHARACTERS = 512;
 
@@ -150,45 +151,7 @@ export default function ComposeScreen() {
           {message.length} / {MAX_CHARACTERS}
         </Text>
 
-        <View style={styles.securityCard}>
-          <Text style={styles.securityTitle}>
-            Security
-          </Text>
-
-          <Text style={styles.securityItem}>
-            🛡 End-to-End Encrypted
-          </Text>
-
-          <Text style={styles.securityItem}>
-            🔑 Recipient Key Verified
-          </Text>
-
-          <Text style={styles.securityItem}>
-            👁 Read Once
-          </Text>
-
-          <Text style={styles.securityItem}>
-            ⏳ Relay Expires Automatically
-          </Text>
-
-          {identity && (
-            <>
-              <Text style={styles.securityItem}>
-                🔐 Identity Loaded
-              </Text>
-
-              <Text
-                style={[
-                  styles.securityItem,
-                  { fontSize: 11 },
-                ]}
-                numberOfLines={1}
-              >
-                {identity.fingerprint}
-              </Text>
-            </>
-          )}
-        </View>
+        
 
         <View style={styles.footer}>
           <PrimaryButton

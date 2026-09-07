@@ -1,18 +1,6 @@
-import { NativeModules } from "react-native";
+import * as Security from "../../modules/ghostrelay-security/src";
 
-const { GhostRelay } = NativeModules;
-
-export interface Identity {
-  publicKey: string;
-  fingerprint: string;
-}
-
-export async function generateIdentity(): Promise<Identity> {
-  const result = await GhostRelay.generateIdentity();
-
-  if (!result) {
-    throw new Error("GhostRelay returned an empty identity.");
-  }
-
-  return JSON.parse(result);
-}
+export const generateIdentity = Security.generateIdentity;
+export const authenticate = Security.authenticate;
+export const isBiometricAvailable =
+  Security.isBiometricAvailable;

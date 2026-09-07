@@ -49,9 +49,7 @@ export default function ContactAddedScreen() {
     }
 
     navigation.navigate("Compose", {
-      receiverId: contact.id,
-      receiverName: contact.name,
-      fingerprint: contact.fingerprint,
+      contact,
     });
 
   }

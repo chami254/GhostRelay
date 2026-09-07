@@ -1,10 +1,10 @@
+
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-import { RootStackParamList } from "./types";
+import type { RootStackParamList } from "./types";
 
 import TabNavigator from "./TabNavigator";
-
 import ComposeScreen from "../screens/messaging/ComposeScreen";
 import AddContactScreen from "../screens/home/AddContactScreen";
 import QRScannerScreen from "../screens/home/QRScannerScreen";
@@ -18,6 +18,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function MainNavigator() {
   return (
     <Stack.Navigator
+      initialRouteName="Tabs"
       screenOptions={{
         headerShown: false,
       }}

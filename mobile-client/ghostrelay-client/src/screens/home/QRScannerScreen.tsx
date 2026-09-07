@@ -1,14 +1,21 @@
-import { ScrollView } from "react-native";
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
-  Alert,
+  ActivityIndicator,
 } from "react-native";
+import { ScrollView } from "react-native";
 
-import { Ionicons } from "@expo/vector-icons";
+import {
+  CameraView,
+  CameraType,
+  useCameraPermissions,
+} from "expo-camera";
 
-import { useNavigation } from "@react-navigation/native";
+import {
+  useNavigation,
+  useFocusEffect,
+} from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import type { RootStackParamList } from "../../navigation/types";
@@ -17,108 +24,133 @@ import Screen from "../../components/Screen";
 import Header from "../../components/Header";
 import PrimaryButton from "../../components/PrimaryButton";
 
-import { Colors } from "../../theme";
-
 import styles from "./QRScannerScreen.styles";
 
-import { generateIdentity } from "../../native/GhostRelay";
-
-
-
 export default function QRScannerScreen() {
-
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  const [scanning, setScanning] = useState(false);
+  const [permission, requestPermission] = useCameraPermissions();
 
-  async function handleSimulatedScan() {
+  const [scanned, setScanned] = useState(false);
+
+  const [cameraFacing] = useState<CameraType>("back");
+
+  useEffect(() => {
+    if (!permission) return;
+
+    if (!permission.granted) {
+      requestPermission();
+    }
+  }, [permission]);
+
+  useFocusEffect(
+    useCallback(() => {
+      setScanned(false);
+    }, [])
+  );
+
+  function handleBarcodeScanned({
+    data,
+  }: {
+    data: string;
+  }) {
+    if (scanned) return;
+
+    setScanned(true);
+
+    console.log("Scanned QR:", data);
 
     try {
+      const contact = JSON.parse(data);
 
-      setScanning(true);
-
-      // TODO:
-      // Replace this with expo-camera QR scanning.
-      // The QR should contain either:
-      // - the contact's public key
-      // - or a serialized contact object.
-
-      const scannedPublicKey =
-        "6FA94D83AB11C84D1B8A47D3EAF3C21A";
-
-      console.log("Scanned Public Key:", scannedPublicKey);
-
-      // Return to Add Contact with the scanned key
       navigation.replace("AddContact", {
-        publicKey: scannedPublicKey,
+        publicKey: contact.publicKey,
       });
-
     } catch {
-
-      Alert.alert(
-        "Scan Failed",
-        "Unable to read QR code."
-      );
-
-    } finally {
-
-      setScanning(false);
-
+      navigation.replace("AddContact", {
+        publicKey: data,
+      });
     }
-
-
   }
 
+  if (!permission) {
+    return (
+      <Screen>
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <ActivityIndicator size="large" />
+        </View>
+      </Screen>
+    );
+  }
 
-  return (
+  if (!permission.granted) {
+    return (
+      <Screen>
+        <Header
+          title="Scan QR Code"
+          onBack={() => navigation.goBack()}
+        />
 
-    <Screen>
-      <ScrollView
-      contentContainerStyle={styles.container}
-      showsVerticalScrollIndicator={false}
-    >
-
-      <Header
-        title="Scan QR Code"
-        onBack={() => navigation.goBack()}
-      />
-
-      <View style={styles.container}>
-
-        <View style={styles.cameraPlaceholder}>
-
-          <Ionicons
-            name="qr-code-outline"
-            size={90}
-            color={Colors.primary}
-          />
-
-          <Text style={styles.cameraText}>
-            Camera Preview
+        <View style={styles.container}>
+          <Text style={styles.instructions}>
+            GhostRelay requires camera permission to scan QR
+            codes.
           </Text>
 
+          <PrimaryButton
+            title="Grant Camera Permission"
+            onPress={requestPermission}
+          />
+        </View>
+      </Screen>
+    );
+  }
+
+  return (
+    <Screen>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
+        <Header
+          title="Scan QR Code"
+          onBack={() => navigation.goBack()}
+        />
+
+        <View style={styles.cameraContainer}>
+          <CameraView
+            style={styles.camera}
+            facing={cameraFacing}
+            barcodeScannerSettings={{
+              barcodeTypes: ["qr"],
+            }}
+            onBarcodeScanned={
+              scanned
+                ? undefined
+                : handleBarcodeScanned
+            }
+          />
         </View>
 
         <Text style={styles.instructions}>
-          Position the contact's QR code inside
-          the frame to securely import their public key.
+          Position the contact's QR code inside the frame to
+          securely import their public key.
         </Text>
 
-        <PrimaryButton
-          title={
-            scanning
-              ? "Scanning..."
-              : "Simulate Successful Scan"
-          }
-          onPress={handleSimulatedScan}
-        />
-
-      </View>
+        {scanned && (
+          <PrimaryButton
+            title="Scan Another QR Code"
+            onPress={() => setScanned(false)}
+          />
+        )}
       </ScrollView>
-
     </Screen>
-
   );
-
 }

@@ -1,6 +1,9 @@
-import { ScrollView } from "react-native";
+
 import React from "react";
-import { View, Text } from "react-native";
+import {
+  View,
+  Text,
+} from "react-native";
 
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -11,17 +14,16 @@ import Screen from "../../components/Screen";
 import GhostLogo from "../../components/GhostLogo";
 import FeatureCard from "../../components/FeatureCard";
 import PrimaryButton from "../../components/PrimaryButton";
-
 import { Colors } from "../../theme";
 
 export default function WelcomeScreen() {
-
   const navigation =
-    useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
+    useNavigation<
+      NativeStackNavigationProp<AuthStackParamList>
+    >();
 
   return (
     <Screen>
-      
       <View
         style={{
           flex: 1,

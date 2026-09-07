@@ -27,7 +27,7 @@ fontSize:16,
 
 selector:{
 
-height:55,
+
 
 backgroundColor:Colors.card,
 

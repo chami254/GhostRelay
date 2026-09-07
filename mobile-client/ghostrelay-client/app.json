@@ -7,7 +7,12 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ghostrelay.client",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "GhostRelay uses Face ID to protect access to your secure messaging environment.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -25,6 +30,11 @@
     "plugins": [
       "expo-secure-store",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "2a4fc41a-aa8b-41e4-ac50-a6ef0435182f"
+      }
+    }
   }
 }

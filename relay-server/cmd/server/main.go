@@ -1,9 +1,17 @@
+// @title GhostRelay API
+// @version 1.0
+// @description GhostRelay Secure Messaging Relay Server
+// @host localhost:8080
+// @BasePath
+
 package main
 
 import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+
+	_ "relay-server/cmd/server/docs"
 
 	"relay-server/internal/api"
 	"relay-server/internal/relay"

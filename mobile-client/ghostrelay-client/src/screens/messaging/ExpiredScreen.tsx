@@ -61,7 +61,9 @@ export default function ExpiredScreen() {
 
         <PrimaryButton
           title="Return Home"
-          onPress={() => navigation.navigate("Tabs")}
+          onPress={() => navigation.navigate("Tabs", {
+            screen: "Home",
+          })}
         />
 
         <View style={{ height: 15 }} />

@@ -1,0 +1,21 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'expo.modules.ghostrelaysecurity'
+version = '0.1.0'
+
+android {
+  namespace "expo.modules.ghostrelaysecurity"
+  defaultConfig {
+    versionCode 1
+    versionName "0.1.0"
+  }
+  lintOptions {
+    abortOnError false
+  }
+}
+dependencies {
+    implementation 'androidx.biometric:biometric:1.1.0'
+}

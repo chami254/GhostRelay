@@ -57,4 +57,15 @@ export default StyleSheet.create({
 
   },
 
+  cameraContainer: {
+    width: "100%",
+    height: 340,
+    borderRadius: 20,
+    overflow: "hidden",
+    marginBottom: 24,
+  },
+  
+  camera: {
+    flex: 1,
+  },
 });

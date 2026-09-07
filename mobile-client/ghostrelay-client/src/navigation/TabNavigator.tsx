@@ -12,7 +12,7 @@ import HomeScreen from "../screens/home/HomeScreen";
 import InboxScreen from "../screens/messaging/InboxScreen";
 import SettingsScreen from "../screens/settings/SettingsScreen";
 
-import { Colors } from "../theme";
+import { Colors } from "../constants/theme";
 
 const Tab =
   createBottomTabNavigator<TabParamList>();
@@ -26,74 +26,57 @@ export default function TabNavigator() {
       initialRouteName="Home"
 
       screenOptions={({ route }) => ({
-
         headerShown: false,
-
-        tabBarActiveTintColor: Colors.primary,
-
-        tabBarInactiveTintColor: Colors.textSecondary,
-
+      
+        tabBarActiveTintColor: Colors.light.text,
+      
+        tabBarInactiveTintColor: Colors.light.textSecondary,
+      
         tabBarStyle: {
-
-          backgroundColor: Colors.background,
-
-          borderTopColor: Colors.border,
-
+          backgroundColor: Colors.light.background,
+          borderTopColor: Colors.light.backgroundSelected,
           height: 65,
-
           paddingBottom: 8,
-
           paddingTop: 6,
-
         },
-
+      
         tabBarLabelStyle: {
-
           fontSize: 12,
-
           fontWeight: "600",
-
         },
-
+      
         tabBarIcon: ({ color, size }) => {
-
           let iconName: keyof typeof Ionicons.glyphMap;
-
+      
           switch (route.name) {
-
             case "Home":
               iconName = "home-outline";
               break;
-
+      
             case "Contacts":
               iconName = "people-outline";
               break;
-
+      
             case "Inbox":
               iconName = "mail-outline";
               break;
-
+      
             case "Settings":
               iconName = "settings-outline";
               break;
-
+      
             default:
               iconName = "ellipse-outline";
-
           }
-
+      
           return (
-
             <Ionicons
               name={iconName}
               size={size}
               color={color}
             />
-
           );
-
         },
-
       })}
 
     >

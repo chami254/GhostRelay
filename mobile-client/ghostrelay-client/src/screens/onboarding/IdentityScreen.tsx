@@ -1,15 +1,18 @@
-import { ScrollView } from "react-native";
 import React, { useState } from "react";
+
 import {
   View,
   Text,
   Alert,
 } from "react-native";
 
-import { useNavigation } from "@react-navigation/native";
+//import { useNavigation } from "@react-navigation/native";
+
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-import type { AuthStackParamList } from "../../navigation/types";
+import type {
+  AuthStackParamList,
+} from "../../navigation/types";
 
 import Screen from "../../components/Screen";
 import Header from "../../components/Header";
@@ -21,30 +24,40 @@ import { Colors } from "../../theme";
 
 import { registerIdentity } from "../../api/identity";
 
-export default function IdentityScreen() {
+import { useAuth } from "../../auth/AuthContext";
 
-  const navigation =
-    useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
+export default function IdentityScreen() {
+  /*const navigation =
+    useNavigation<
+      NativeStackNavigationProp<AuthStackParamList>
+    >();*/
+
+  const { createSession } = useAuth();
 
   const [publicKey, setPublicKey] = useState("");
   const [fingerprint, setFingerprint] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleGenerateIdentity() {
-
     try {
-
       setLoading(true);
 
-      // Temporary development identity.
-      // Later this entire section will be replaced
-      // by the Rust Security Core.
+      /*
+       * Temporary development identity.
+       *
+       * This will eventually be replaced by the
+       * GhostRelay Rust security core.
+       */
 
       const generatedPublicKey =
-        crypto.randomUUID().replace(/-/g, "").toUpperCase();
+        crypto
+          .randomUUID()
+          .replace(/-/g, "")
+          .toUpperCase();
 
       const generatedFingerprint =
-        generatedPublicKey.substring(0, 16)
+        generatedPublicKey
+          .substring(0, 16)
           .match(/.{1,2}/g)
           ?.join(":") ?? "";
 
@@ -56,31 +69,37 @@ export default function IdentityScreen() {
         publicKey: generatedPublicKey,
       });
 
+      /*
+       * Identity has now been registered.
+       *
+       * Create the application session.
+       *
+       * ApplicationGate will detect the authenticated
+       * state and render MainNavigator automatically.
+       */
+      await createSession();
+
       Alert.alert(
         "Identity Created",
-        "Your identity has been registered with the relay."
+        "Your identity has been created successfully."
       );
-
     } catch (error) {
+      console.error(
+        "Identity creation failed:",
+        error
+      );
 
       Alert.alert(
         "Registration Failed",
-        "Unable to register your identity."
+        "Unable to create your GhostRelay identity."
       );
-
     } finally {
-
       setLoading(false);
-
     }
-
   }
 
   return (
-
     <Screen>
-      
-
       <Header title="Identity" />
 
       <View
@@ -89,7 +108,6 @@ export default function IdentityScreen() {
           padding: 24,
         }}
       >
-
         <GhostLogo />
 
         <Text
@@ -116,7 +134,6 @@ export default function IdentityScreen() {
         </Text>
 
         <Card>
-
           <Text
             style={{
               color: Colors.primary,
@@ -133,11 +150,9 @@ export default function IdentityScreen() {
           >
             {publicKey || "Tap Generate Identity"}
           </Text>
-
         </Card>
 
         <Card>
-
           <Text
             style={{
               color: Colors.primary,
@@ -154,7 +169,6 @@ export default function IdentityScreen() {
           >
             {fingerprint || "--:--:--:--"}
           </Text>
-
         </Card>
 
         <View
@@ -162,23 +176,16 @@ export default function IdentityScreen() {
             marginTop: 24,
           }}
         >
-
           <PrimaryButton
-            title={loading ? "Generating..." : "Generate Identity"}
+            title={
+              loading
+                ? "Generating..."
+                : "Generate Identity"
+            }
             onPress={handleGenerateIdentity}
           />
-
-          <PrimaryButton
-            title="Continue"
-            onPress={() => navigation.replace("Main")}
-          />
-
         </View>
-
       </View>
-
     </Screen>
-
   );
-
 }

@@ -1,4 +1,4 @@
-import { ScrollView } from "react-native";
+
 import React, { useEffect } from "react";
 import {
   View,
@@ -8,53 +8,45 @@ import {
 
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+
 import type { AuthStackParamList } from "../../navigation/types";
 
 import Screen from "../../components/Screen";
 import GhostLogo from "../../components/GhostLogo";
 import { Colors } from "../../theme";
 
-
 export default function SplashScreen() {
-
   const navigation =
-  useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
+    useNavigation<
+      NativeStackNavigationProp<AuthStackParamList>
+    >();
 
   useEffect(() => {
-
     const timer = setTimeout(() => {
-  
       navigation.replace("Welcome");
-  
     }, 2000);
-  
-    return () => clearTimeout(timer);
-  
-  }, []);
 
-     
+    return () => clearTimeout(timer);
+  }, [navigation]);
 
   return (
-
     <Screen>
-
       <View
         style={{
-          flex:1,
-          justifyContent:"center",
-          alignItems:"center",
-          paddingHorizontal:30,
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          paddingHorizontal: 30,
         }}
       >
-
-        <GhostLogo/>
+        <GhostLogo />
 
         <Text
           style={{
-            color:Colors.text,
-            fontSize:32,
-            fontWeight:"700",
-            marginTop:10,
+            color: Colors.text,
+            fontSize: 32,
+            fontWeight: "700",
+            marginTop: 10,
           }}
         >
           GhostRelay
@@ -62,9 +54,9 @@ export default function SplashScreen() {
 
         <Text
           style={{
-            color:Colors.textSecondary,
-            marginTop:8,
-            textAlign:"center",
+            color: Colors.textSecondary,
+            marginTop: 8,
+            textAlign: "center",
           }}
         >
           Secure Ephemeral Messaging
@@ -74,14 +66,10 @@ export default function SplashScreen() {
           color={Colors.primary}
           size="large"
           style={{
-            marginTop:50,
+            marginTop: 50,
           }}
         />
-
       </View>
-
     </Screen>
-
   );
-
 }

@@ -89,13 +89,7 @@ export default function ContactsScreen() {
               onPress={() =>
 
                 navigation.navigate("Compose", {
-
-                  receiverId: item.id,
-
-                  receiverName: item.name,
-
-                  fingerprint: item.fingerprint,
-
+                  contact: item,
                 })
 
               }

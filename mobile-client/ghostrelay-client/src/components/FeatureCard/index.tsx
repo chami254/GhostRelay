@@ -3,24 +3,20 @@ import { View, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import Card from "../Card";
+import styles from "./styles";
 
-interface Props {
+interface FeaturedCardProps {
   icon: keyof typeof Ionicons.glyphMap;
   title: string;
 }
 
-export default function FeatureCard({
+export default function FeaturedCard({
   icon,
   title,
-}: Props) {
+}: FeaturedCardProps) {
   return (
     <Card>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-        }}
-      >
+      <View style={styles.container}>
         <Ionicons
           name={icon}
           size={18}
@@ -28,11 +24,9 @@ export default function FeatureCard({
         />
 
         <Text
-          style={{
-            color: "white",
-            marginLeft: 12,
-            fontSize: 15,
-          }}
+          style={styles.title}
+          numberOfLines={2}
+          ellipsizeMode="tail"
         >
           {title}
         </Text>

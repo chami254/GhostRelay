@@ -2,18 +2,15 @@ import { StyleSheet } from "react-native";
 import { Colors } from "../../theme";
 
 export default StyleSheet.create({
-  card: {
-
-    backgroundColor: Colors.card,
-
+  container: {
+    width: 72,
+    height: 72,
     borderRadius: 18,
-
-    padding: 18,
-
-    marginVertical: 8,
-
     borderWidth: 1,
-
-    borderColor: Colors.border,
+    borderColor: Colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    alignSelf: "center",
+    marginBottom: 24,
   },
 });

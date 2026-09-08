@@ -1,6 +1,11 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import {
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+
 import styles from "./styles";
 
 interface HeaderProps {
@@ -14,17 +19,34 @@ export default function Header({
 }: HeaderProps) {
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={onBack}>
-        <Ionicons
-          name="arrow-back"
-          size={22}
-          color="#10D6B3"
-        />
-      </TouchableOpacity>
+      {onBack ? (
+        <TouchableOpacity
+          onPress={onBack}
+          activeOpacity={0.7}
+          style={styles.backButton}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          hitSlop={8}
+        >
+          <Ionicons
+            name="arrow-back"
+            size={22}
+            color="#10D6B3"
+          />
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.sidePlaceholder} />
+      )}
 
-      <Text style={styles.title}>{title}</Text>
+      <Text
+        style={styles.title}
+        numberOfLines={1}
+        ellipsizeMode="tail"
+      >
+        {title}
+      </Text>
 
-      <View style={{ width: 22 }} />
+      <View style={styles.sidePlaceholder} />
     </View>
   );
 }

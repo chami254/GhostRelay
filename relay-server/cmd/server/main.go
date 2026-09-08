@@ -36,10 +36,10 @@ func main() {
 
 	log.Println("=====================================")
 	log.Println(" GhostRelay Relay Server")
-	log.Println(" Listening on http://localhost:8080")
+	log.Println(" Listening on http://0.0.0.0:8080")
 	log.Println("=====================================")
 
-	if err := router.Run(":8080"); err != nil {
+	if err := router.Run("0.0.0.0:8080"); err != nil {
 		log.Fatal(err)
 	}
 }

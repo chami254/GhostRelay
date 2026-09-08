@@ -1,4 +1,3 @@
-
 import type { NavigatorScreenParams } from "@react-navigation/native";
 
 /* ---------------- AUTH ---------------- */
@@ -7,7 +6,6 @@ export type AuthStackParamList = {
   Splash: undefined;
   Welcome: undefined;
   Identity: undefined;
-  Main: undefined;
 };
 
 /* ---------------- TABS ---------------- */

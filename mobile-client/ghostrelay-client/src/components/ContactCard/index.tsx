@@ -1,6 +1,11 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import {
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+
 import Card from "../Card";
 import styles from "./styles";
 
@@ -21,52 +26,64 @@ export default function ContactCard({
   fingerprint,
   onPress,
 }: ContactCardProps) {
+  const initial = name.trim().charAt(0).toUpperCase();
+
   return (
     <TouchableOpacity
       activeOpacity={0.8}
       onPress={onPress}
+      disabled={!onPress}
+      accessibilityRole={onPress ? "button" : undefined}
+      accessibilityLabel={
+        onPress ? `Open conversation with ${name}` : undefined
+      }
     >
       <Card>
         <View style={styles.container}>
           {/* Avatar */}
-
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>
-              {name.charAt(0).toUpperCase()}
+              {initial || "?"}
             </Text>
           </View>
 
-          {/* Contact Info */}
-
+          {/* Contact information */}
           <View style={styles.info}>
-            <Text style={styles.name}>
+            <Text
+              style={styles.name}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {name}
             </Text>
 
-            <Text style={styles.lastSeen}>
+            <Text
+              style={styles.lastSeen}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {lastSeen}
             </Text>
+
+            {fingerprint && (
+              <Text
+                style={styles.fingerprint}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {fingerprint}
+              </Text>
+            )}
           </View>
 
-          {/* Fingerprint */}
-
-          {fingerprint && (
-            <Text style={styles.fingerprint}>
-              {fingerprint}
-            </Text>
-          )}
-
-          {/* Status */}
-
+          {/* Contact status */}
           <View style={styles.statusContainer}>
             <View
               style={[
                 styles.onlineIndicator,
-                {
-                  backgroundColor: online
-                    ? "#10D6B3"
-                    : "#5B6574",
-                },
+                online
+                  ? styles.online
+                  : styles.offline,
               ]}
             />
 
@@ -78,11 +95,13 @@ export default function ContactCard({
               />
             )}
 
-            <Ionicons
-              name="chatbubble-outline"
-              size={18}
-              color="#9AA8B5"
-            />
+            {onPress && (
+              <Ionicons
+                name="chatbubble-outline"
+                size={18}
+                color="#9AA8B5"
+              />
+            )}
           </View>
         </View>
       </Card>

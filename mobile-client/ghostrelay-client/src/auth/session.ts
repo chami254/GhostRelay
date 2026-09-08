@@ -1,3 +1,5 @@
+import * as Crypto from "expo-crypto";
+
 /* ---------------- SESSION TYPES ---------------- */
 
 export interface Session {
@@ -53,7 +55,7 @@ async function createSession(): Promise<Session> {
   const now = Date.now();
 
   const session: Session = {
-    sessionId: crypto.randomUUID(),
+    sessionId: Crypto.randomUUID(),
     createdAt: now,
     expiresAt: now + SESSION_DURATION,
   };

@@ -1,7 +1,11 @@
-import { api } from "./client";
-import { Identity } from "./types";
+import { apiFetch } from "./client";
+import type { Identity } from "./types";
 
-export async function registerIdentity(identity: Identity) {
-  const response = await api.post("/identity", identity);
-  return response.data;
+export async function registerIdentity(
+  identity: Identity
+): Promise<Identity> {
+  return apiFetch<Identity>("/identity", {
+    method: "POST",
+    body: JSON.stringify(identity),
+  });
 }

@@ -1,14 +1,20 @@
-
 import React from "react";
 import {
   View,
   Text,
 } from "react-native";
 
-import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import {
+  useNavigation,
+} from "@react-navigation/native";
 
-import type { AuthStackParamList } from "../../navigation/types";
+import type {
+  NativeStackNavigationProp,
+} from "@react-navigation/native-stack";
+
+import type {
+  AuthStackParamList,
+} from "../../navigation/types";
 
 import Screen from "../../components/Screen";
 import GhostLogo from "../../components/GhostLogo";
@@ -81,7 +87,9 @@ export default function WelcomeScreen() {
         >
           <PrimaryButton
             title="Begin Setup"
-            onPress={() => navigation.navigate("Identity")}
+            onPress={() =>
+              navigation.navigate("Identity")
+            }
           />
         </View>
 

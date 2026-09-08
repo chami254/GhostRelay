@@ -1,49 +1,95 @@
 import { StyleSheet } from "react-native";
+import { Colors } from "../../theme";
 
 export default StyleSheet.create({
+  container: {
+    flex: 1,
+  },
 
-    container: {
+  listContent: {
+    paddingHorizontal: 22,
+    paddingTop: 10,
+    paddingBottom: 24,
+  },
 
-        flex:1,
+  listEmptyContainer: {
+    flexGrow: 1,
+    paddingHorizontal: 22,
+    paddingBottom: 24,
+  },
 
-        padding:20,
+  contactCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    minHeight: 76,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginBottom: 12,
+    backgroundColor: Colors.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
 
-    },
+  contactInfo: {
+    flex: 1,
+    marginLeft: 12,
+    marginRight: 10,
+  },
 
-    contactCard: {
+  name: {
+    color: Colors.text,
+    fontSize: 17,
+    fontWeight: "700",
+  },
 
-        flexDirection:"row",
+  fingerprint: {
+    color: Colors.textSecondary,
+    fontSize: 12,
+    marginTop: 5,
+  },
 
-        alignItems:"center",
+  emptyState: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 30,
+    paddingBottom: 80,
+  },
 
-        padding:16,
+  emptyText: {
+    color: Colors.textSecondary,
+    fontSize: 16,
+    textAlign: "center",
+    marginTop: 16,
+  },
 
-        marginBottom:12,
+  emptyDescription: {
+    color: Colors.textSecondary,
+    fontSize: 14,
+    lineHeight: 21,
+    textAlign: "center",
+    marginTop: 8,
+    maxWidth: 300,
+  },
 
-        borderRadius:12,
+  retryButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 46,
+    paddingHorizontal: 20,
+    marginTop: 20,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.card,
+  },
 
-        backgroundColor:"#1A2233",
-
-    },
-
-    name:{
-
-        color:"white",
-
-        fontSize:17,
-
-        fontWeight:"700",
-
-    },
-
-    fingerprint:{
-
-        color:"#8C9AA8",
-
-        marginTop:4,
-
-        fontSize:12,
-
-    },
-
+  retryText: {
+    color: Colors.primary,
+    fontSize: 15,
+    fontWeight: "600",
+    marginLeft: 8,
+  },
 });

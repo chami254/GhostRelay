@@ -1,96 +1,69 @@
 import React from "react";
 import {
-  View,
   Text,
   TouchableOpacity,
+  View,
 } from "react-native";
-
 import { Ionicons } from "@expo/vector-icons";
 
+import { Colors } from "../../theme";
 import styles from "./styles";
 
-interface SettingsItemProps{
-
-icon:any;
-
-title:string;
-
-subtitle?:string;
-
-onPress:()=>void;
-
+interface SettingsItemProps {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  subtitle?: string;
+  onPress: () => void;
 }
 
 export default function SettingsItem({
+  icon,
+  title,
+  subtitle,
+  onPress,
+}: SettingsItemProps) {
+  return (
+    <TouchableOpacity
+      style={styles.container}
+      activeOpacity={0.8}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityHint={
+        subtitle ? subtitle : undefined
+      }
+    >
+      <View style={styles.left}>
+        <Ionicons
+          name={icon}
+          size={22}
+          color={Colors.primary}
+        />
 
-icon,
+        <View style={styles.textContainer}>
+          <Text
+            style={styles.title}
+            numberOfLines={1}
+          >
+            {title}
+          </Text>
 
-title,
+          {subtitle ? (
+            <Text
+              style={styles.subtitle}
+              numberOfLines={2}
+            >
+              {subtitle}
+            </Text>
+          ) : null}
+        </View>
+      </View>
 
-subtitle,
-
-onPress,
-
-}:SettingsItemProps){
-
-return(
-
-<TouchableOpacity
-
-style={styles.container}
-
-activeOpacity={0.8}
-
-onPress={onPress}
-
->
-
-<View style={styles.left}>
-
-<Ionicons
-
-name={icon}
-
-size={22}
-
-color="#10D6B3"
-
-/>
-
-<View style={styles.textContainer}>
-
-<Text style={styles.title}>
-
-{title}
-
-</Text>
-
-{subtitle && (
-
-<Text style={styles.subtitle}>
-
-{subtitle}
-
-</Text>
-
-)}
-
-</View>
-
-</View>
-
-<Ionicons
-
-name="chevron-forward"
-
-size={20}
-
-color="#8C9AA8"
-
-/>
-
-</TouchableOpacity>
-
-);
-
+      <Ionicons
+        name="chevron-forward"
+        size={20}
+        color={Colors.textSecondary}
+      />
+    </TouchableOpacity>
+  );
 }

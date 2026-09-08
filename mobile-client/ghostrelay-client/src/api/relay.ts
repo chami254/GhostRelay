@@ -1,16 +1,19 @@
-import { api } from "./client";
-import { RelayRequest } from "./types";
+import { apiFetch } from "./client";
+import type { RelayRequest } from "./types";
 
-export async function relayMessage(message: RelayRequest) {
-  const response = await api.post("/relay", message);
-  return response.data;
+export async function relayMessage(
+  message: RelayRequest
+): Promise<unknown> {
+  return apiFetch<unknown>("/relay", {
+    method: "POST",
+    body: JSON.stringify(message),
+  });
 }
 
-export async function getMessages(receiverId: string) {
-  const response = await api.get(`/messages/${receiverId}`);
-  return response.data;
-}
-
-export async function deleteMessage(id: string) {
-  return api.delete(`/messages/${id}`);
+export async function getMessages(
+  receiverId: string
+): Promise<unknown> {
+  return apiFetch<unknown>(
+    `/messages/${receiverId}`
+  );
 }

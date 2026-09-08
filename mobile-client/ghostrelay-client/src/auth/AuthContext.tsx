@@ -62,11 +62,17 @@ export function AuthProvider({
   /* ---------------- CREATE SESSION ---------------- */
 
   async function createSession() {
+    console.log("AUTH: createSession() START");
+  
     const newSession =
       await sessionService.createSession();
-
+  
+    console.log("AUTH: session created:", newSession);
+  
     setSession(newSession);
     setStatus("authenticated");
+  
+    console.log("AUTH: status set to authenticated");
   }
 
   /* ---------------- RESTORE SESSION ---------------- */

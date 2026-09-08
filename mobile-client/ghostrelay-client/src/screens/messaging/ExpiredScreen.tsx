@@ -1,5 +1,5 @@
-import { ScrollView } from "react-native";
 import React from "react";
+
 import {
   View,
   Text,
@@ -20,68 +20,65 @@ import type {
 } from "../../navigation/types";
 
 import Screen from "../../components/Screen";
+
 import PrimaryButton from "../../components/PrimaryButton";
 
 import { Colors } from "../../theme";
 
 import styles from "./ExpiredScreen.styles";
 
-
+type ExpiredNavigationProp =
+  NativeStackNavigationProp<RootStackParamList>;
 
 export default function ExpiredScreen() {
-
   const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+    useNavigation<ExpiredNavigationProp>();
 
   return (
-
     <Screen>
-      <ScrollView
-      contentContainerStyle={styles.container}
-      showsVerticalScrollIndicator={false}
-    >
-
       <View style={styles.container}>
+        <View style={styles.content}>
+          <Ionicons
+            name="shield-checkmark"
+            size={110}
+            color={Colors.primary}
+          />
 
-        <Ionicons
-          name="shield-checkmark"
-          size={120}
-          color={Colors.primary}
-        />
+          <Text style={styles.title}>
+            Message Destroyed
+          </Text>
 
-        <Text style={styles.title}>
-          Message Destroyed
-        </Text>
+          <Text style={styles.subtitle}>
+            The encrypted payload has been
+            securely removed.
+            {"\n\n"}
+            No readable message remains on
+            this device.
+          </Text>
+        </View>
 
-        <Text style={styles.subtitle}>
-          The encrypted payload has been securely removed.
-          {"\n\n"}
-          No readable message remains on this device.
-        </Text>
+        <View style={styles.actions}>
+          <PrimaryButton
+            title="Return Home"
+            onPress={() =>
+              navigation.navigate("Tabs", {
+                screen: "Home",
+              })
+            }
+          />
 
-        <PrimaryButton
-          title="Return Home"
-          onPress={() => navigation.navigate("Tabs", {
-            screen: "Home",
-          })}
-        />
+          <View style={styles.buttonSpacer} />
 
-        <View style={{ height: 15 }} />
-
-        <PrimaryButton
-          title="View Inbox"
-          onPress={() =>
-            navigation.navigate("Tabs", {
-              screen: "Inbox",
-            })
-          }
-        />
-
+          <PrimaryButton
+            title="View Inbox"
+            onPress={() =>
+              navigation.navigate("Tabs", {
+                screen: "Inbox",
+              })
+            }
+          />
+        </View>
       </View>
-      </ScrollView>
-
     </Screen>
-
   );
-
 }

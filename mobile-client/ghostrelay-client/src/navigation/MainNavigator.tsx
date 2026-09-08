@@ -1,4 +1,3 @@
-
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
@@ -18,11 +17,16 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function MainNavigator() {
   return (
     <Stack.Navigator
-      initialRouteName="Tabs"
+      initialRouteName="QRScanner"
       screenOptions={{
         headerShown: false,
       }}
     >
+      <Stack.Screen
+        name="QRScanner"
+        component={QRScannerScreen}
+      />
+
       <Stack.Screen
         name="Tabs"
         component={TabNavigator}
@@ -36,11 +40,6 @@ export default function MainNavigator() {
       <Stack.Screen
         name="AddContact"
         component={AddContactScreen}
-      />
-
-      <Stack.Screen
-        name="QRScanner"
-        component={QRScannerScreen}
       />
 
       <Stack.Screen

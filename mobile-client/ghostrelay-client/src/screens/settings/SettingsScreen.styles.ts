@@ -2,49 +2,96 @@ import { StyleSheet } from "react-native";
 import { Colors } from "../../theme";
 
 export default StyleSheet.create({
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 32,
+  },
 
-container:{
+  content: {
+    paddingHorizontal: 22,
+    paddingBottom: 24,
+  },
 
-flex:1,
+  /*
+   * ---------------- SECTION HEADERS ----------------
+   */
 
-paddingHorizontal:22,
+  sectionTitle: {
+    color: Colors.textSecondary,
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 1.2,
+    marginTop: 24,
+    marginBottom: 4,
+    paddingHorizontal: 4,
+  },
 
-paddingTop:10,
+  /*
+   * ---------------- SYSTEM STATUS ----------------
+   */
 
-},
+  statusHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
 
-statusTitle:{
+  statusTitleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
 
-fontSize:18,
+  statusIcon: {
+    color: Colors.primary,
+  },
 
-fontWeight:"700",
+  statusTitle: {
+    color: Colors.primary,
+    fontSize: 18,
+    fontWeight: "700",
+    marginLeft: 8,
+  },
 
-color:Colors.primary,
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
 
-marginBottom:15,
+  statusItem: {
+    flex: 1,
+    color: Colors.text,
+    fontSize: 14,
+    marginLeft: 10,
+    lineHeight: 20,
+  },
 
-},
+  /*
+   * ---------------- FOOTER ----------------
+   */
 
-statusItem:{
+  footer: {
+    alignItems: "center",
+    paddingTop: 30,
+    paddingBottom: 12,
+  },
 
-fontSize:15,
+  version: {
+    color: Colors.text,
+    fontSize: 14,
+    fontWeight: "700",
+  },
 
-color:Colors.text,
+  versionDetail: {
+    color: Colors.textSecondary,
+    fontSize: 13,
+    marginTop: 4,
+  },
 
-marginBottom:10,
-
-},
-
-version:{
-
-marginTop:30,
-
-textAlign:"center",
-
-color:Colors.textSecondary,
-
-fontSize:13,
-
-}
-
+  environment: {
+    color: Colors.textSecondary,
+    fontSize: 12,
+    marginTop: 6,
+    textAlign: "center",
+  },
 });

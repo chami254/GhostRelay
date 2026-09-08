@@ -1,44 +1,49 @@
-import axios from "axios";
+const API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_BASE_URL ??
+  "http://192.168.1.8:8080";
 
-export const api = axios.create({
-  baseURL: "http://YOUR_PC_IP:8080",
-  timeout: 5000,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+export { API_BASE_URL };
 
-const API_BASE_URL = "http://192.168.1.100:8080";
-
-// Android Emulator:
-// http://10.0.2.2:8080
-
-// Physical Phone:
-// Replace with your PC's LAN IP
-
-export async function apiFetch(
+export async function apiFetch<T>(
   endpoint: string,
-  options?: RequestInit
-) {
-
+  options: RequestInit = {}
+): Promise<T> {
   const response = await fetch(
     `${API_BASE_URL}${endpoint}`,
     {
-      headers: {
-        "Content-Type": "application/json",
-      },
       ...options,
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        ...(options.headers ?? {}),
+      },
     }
   );
 
   if (!response.ok) {
+    let errorMessage = `HTTP ${response.status}`;
 
-    throw new Error(
-      `HTTP ${response.status}`
-    );
+    try {
+      const errorBody: unknown = await response.json();
 
+      if (
+        typeof errorBody === "object" &&
+        errorBody !== null &&
+        "message" in errorBody &&
+        typeof errorBody.message === "string"
+      ) {
+        errorMessage = errorBody.message;
+      }
+    } catch {
+      // The response does not contain a JSON error body.
+    }
+
+    throw new Error(errorMessage);
   }
 
-  return response.json();
+  if (response.status === 204) {
+    return undefined as T;
+  }
 
+  return (await response.json()) as T;
 }

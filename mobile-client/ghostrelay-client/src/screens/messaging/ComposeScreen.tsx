@@ -1,17 +1,16 @@
-import { ScrollView } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   TextInput,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
-
 import {
   useNavigation,
   useRoute,
 } from "@react-navigation/native";
-
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
 
@@ -21,53 +20,38 @@ import Screen from "../../components/Screen";
 import Header from "../../components/Header";
 import PrimaryButton from "../../components/PrimaryButton";
 
-import styles from "./ComposeScreen.styles";
-
-// Temporary API
-// Later this will relay through the GhostRelay Rust core.
 import { sendMessage } from "../../api/messages";
 
-import { generateIdentity } from "../../native/GhostRelay";
+import styles from "./ComposeScreen.styles";
+
+const MAX_CHARACTERS = 512;
+
+type ComposeNavigationProp =
+  NativeStackNavigationProp<RootStackParamList>;
+
+type ComposeRouteProp =
+  RouteProp<RootStackParamList, "Compose">;
 
 export default function ComposeScreen() {
   const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+    useNavigation<ComposeNavigationProp>();
 
   const route =
-    useRoute<RouteProp<RootStackParamList, "Compose">>();
+    useRoute<ComposeRouteProp>();
 
-    const { contact } = route.params;
-
-    const receiverId = contact.id;
-    const receiverName = contact.name;
-    const fingerprint = contact.fingerprint;
+  const { contact } = route.params;
 
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
-  const [identity, setIdentity] = useState<any>(null);
 
-
-  const MAX_CHARACTERS = 512;
-
-  useEffect(() => {
-    async function loadIdentity() {
-      try {
-        const id = await generateIdentity();
-
-        setIdentity(id);
-
-        console.log("Public Key:", id.publicKey);
-        console.log("Fingerprint:", id.fingerprint);
-      } catch (error) {
-        console.error("Identity generation failed:", error);
-      }
-    }
-
-    loadIdentity();
-  }, []);
+  const receiverId = contact.id;
+  const receiverName = contact.name;
+  const fingerprint = contact.fingerprint;
 
   async function handleSend() {
-    if (!message.trim()) {
+    const trimmedMessage = message.trim();
+
+    if (!trimmedMessage) {
       Alert.alert(
         "Empty Message",
         "Please enter a message before sending."
@@ -75,26 +59,30 @@ export default function ComposeScreen() {
       return;
     }
 
+    if (sending) {
+      return;
+    }
+
     try {
       setSending(true);
 
-      await sendMessage({
-        receiverId,
-        message,
-      });
+      await sendMessage(receiverId, message);
 
       Alert.alert(
         "Message Relayed",
-        "Your encrypted message has been uploaded to the relay."
+        "Your message has been securely submitted to the relay."
       );
 
       navigation.goBack();
     } catch (error) {
-      console.error(error);
+      console.error(
+        "MESSAGE SEND ERROR:",
+        error
+      );
 
       Alert.alert(
         "Relay Error",
-        "Unable to relay your message."
+        "Unable to relay your message. Please try again."
       );
     } finally {
       setSending(false);
@@ -103,68 +91,79 @@ export default function ComposeScreen() {
 
   return (
     <Screen>
-      <ScrollView
-      contentContainerStyle={styles.container}
-      showsVerticalScrollIndicator={false}
-    >
-      <Header
-        title="Compose"
-        onBack={() => navigation.goBack()}
-      />
-
-      <View style={styles.container}>
-        <Text style={styles.label}>
-          Recipient
-        </Text>
-
-        <View style={styles.selector}>
-          <Text style={styles.selectorText}>
-            {receiverName}
-          </Text>
-        </View>
-
-        <Text style={styles.label}>
-          Fingerprint
-        </Text>
-
-        <View style={styles.selector}>
-          <Text style={styles.selectorText}>
-            {fingerprint}
-          </Text>
-        </View>
-
-        <Text style={styles.label}>
-          Message
-        </Text>
-
-        <TextInput
-          style={styles.input}
-          multiline
-          maxLength={MAX_CHARACTERS}
-          placeholder="Write your secure message..."
-          placeholderTextColor="#6B7280"
-          value={message}
-          onChangeText={setMessage}
+      <KeyboardAvoidingView
+        style={styles.screen}
+        behavior={
+          Platform.OS === "ios"
+            ? "padding"
+            : undefined
+        }
+      >
+        <Header
+          title="Compose"
+          onBack={() => navigation.goBack()}
         />
 
-        <Text style={styles.counter}>
-          {message.length} / {MAX_CHARACTERS}
-        </Text>
+        <View style={styles.container}>
+          <Text style={styles.label}>
+            Recipient
+          </Text>
 
-        
+          <View style={styles.selector}>
+            <Text
+              style={styles.selectorText}
+              numberOfLines={1}
+            >
+              {receiverName}
+            </Text>
+          </View>
 
-        <View style={styles.footer}>
-          <PrimaryButton
-            title={
-              sending
-                ? "Encrypting..."
-                : "Encrypt & Relay"
-            }
-            onPress={handleSend}
+          <Text style={styles.label}>
+            Fingerprint
+          </Text>
+
+          <View style={styles.selector}>
+            <Text
+              style={styles.selectorText}
+              numberOfLines={2}
+            >
+              {fingerprint || "Fingerprint unavailable"}
+            </Text>
+          </View>
+
+          <Text style={styles.label}>
+            Message
+          </Text>
+
+          <TextInput
+            style={styles.input}
+            multiline
+            maxLength={MAX_CHARACTERS}
+            placeholder="Write your secure message..."
+            placeholderTextColor="#6B7280"
+            value={message}
+            onChangeText={setMessage}
+            autoCapitalize="sentences"
+            autoCorrect
+            textAlignVertical="top"
           />
+
+          <Text style={styles.counter}>
+            {message.length} / {MAX_CHARACTERS}
+          </Text>
+
+          <View style={styles.footer}>
+            <PrimaryButton
+              title={
+                sending
+                  ? "Sending..."
+                  : "Encrypt & Relay"
+              }
+              onPress={handleSend}
+            />
+          </View>
         </View>
-      </View>
-      </ScrollView>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }

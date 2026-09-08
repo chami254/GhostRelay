@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import {
   View,
@@ -6,10 +5,17 @@ import {
   ActivityIndicator,
 } from "react-native";
 
-import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import {
+  useNavigation,
+} from "@react-navigation/native";
 
-import type { AuthStackParamList } from "../../navigation/types";
+import type {
+  NativeStackNavigationProp,
+} from "@react-navigation/native-stack";
+
+import type {
+  AuthStackParamList,
+} from "../../navigation/types";
 
 import Screen from "../../components/Screen";
 import GhostLogo from "../../components/GhostLogo";
@@ -26,7 +32,9 @@ export default function SplashScreen() {
       navigation.replace("Welcome");
     }, 2000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+    };
   }, [navigation]);
 
   return (

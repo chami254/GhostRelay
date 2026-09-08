@@ -1,4 +1,3 @@
-import { ScrollView } from "react-native";
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -6,6 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
+  ScrollView,
 } from "react-native";
 
 import * as Clipboard from "expo-clipboard";
@@ -30,180 +30,183 @@ import styles from "./AddContactScreen.styles";
 
 import { saveContact } from "../../api/contacts";
 
-import { generateIdentity } from "../../native/GhostRelay";
-
-
 export default function AddContactScreen() {
-
   const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+    useNavigation<
+      NativeStackNavigationProp<RootStackParamList>
+    >();
 
   const route =
-    useRoute<RouteProp<RootStackParamList, "AddContact">>();
+    useRoute<
+      RouteProp<RootStackParamList, "AddContact">
+    >();
 
   const [publicKey, setPublicKey] = useState("");
   const [saving, setSaving] = useState(false);
 
-  // Automatically populate the field if we came back
-  // from QRScanner with a scanned public key.
+  /* ---------------- IMPORT SCANNED KEY ---------------- */
+
   useEffect(() => {
+    const scannedKey = route.params?.publicKey;
 
-    if (route.params?.publicKey) {
-
-      setPublicKey(route.params.publicKey);
-
+    if (scannedKey) {
+      setPublicKey(scannedKey);
     }
+  }, [route.params?.publicKey]);
 
-  }, [route.params]);
+  /* ---------------- PASTE ---------------- */
 
   async function handlePaste() {
+    try {
+      const text = await Clipboard.getStringAsync();
 
-    const text = await Clipboard.getStringAsync();
+      if (!text.trim()) {
+        Alert.alert(
+          "Clipboard Empty",
+          "No public key was found in the clipboard."
+        );
+        return;
+      }
 
-    if (!text) {
-
-      Alert.alert(
-        "Clipboard Empty",
-        "No public key found."
+      setPublicKey(text.trim());
+    } catch (error) {
+      console.error(
+        "Failed to read clipboard:",
+        error
       );
 
-      return;
-
+      Alert.alert(
+        "Clipboard Error",
+        "Unable to read the clipboard."
+      );
     }
-
-    setPublicKey(text);
-
   }
+
+  /* ---------------- QR SCANNER ---------------- */
 
   function handleScanQR() {
-
     navigation.navigate("QRScanner");
-
   }
 
+  /* ---------------- SAVE CONTACT ---------------- */
+
   async function handleSave() {
+    const trimmedKey = publicKey.trim();
 
-    if (!publicKey.trim()) {
-
+    if (!trimmedKey) {
       Alert.alert(
         "Missing Public Key",
         "Paste or scan a public key first."
       );
-
       return;
-
     }
 
     try {
-
       setSaving(true);
 
       const savedContact = await saveContact({
-        publicKey,
+        publicKey: trimmedKey,
       });
-      
+
       navigation.replace("ContactAdded", {
         contact: savedContact,
       });
-
-    } catch {
-
-      Alert.alert(
-        "Error",
-        "Unable to save contact."
+    } catch (error) {
+      console.error(
+        "Failed to save contact:",
+        error
       );
 
+      Alert.alert(
+        "Unable to Add Contact",
+        "The contact could not be saved. Please verify the public key and try again."
+      );
     } finally {
-
       setSaving(false);
-
     }
-
   }
 
+  /* ---------------- UI ---------------- */
+
   return (
-
     <Screen>
-      <ScrollView
-      contentContainerStyle={styles.container}
-      showsVerticalScrollIndicator={false}
-    >
-
-      <Header
-        title="Add Contact"
-        onBack={() => navigation.goBack()}
-      />
-
-      <View style={styles.container}>
-
-        <Text style={styles.heading}>
-          Import Public Key
-        </Text>
-
-        <Text style={styles.description}>
-          Enter a trusted user's public key or scan
-          their QR code to establish a secure identity.
-        </Text>
-
-        <TextInput
-          style={styles.input}
-          multiline
-          placeholder="Paste public key..."
-          placeholderTextColor={Colors.textSecondary}
-          value={publicKey}
-          onChangeText={setPublicKey}
-          autoCapitalize="none"
-          autoCorrect={false}
+      <View style={styles.screen}>
+        <Header
+          title="Add Contact"
+          onBack={() => navigation.goBack()}
         />
 
-        <TouchableOpacity
-          style={styles.secondaryButton}
-          onPress={handlePaste}
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.container}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-
-          <Ionicons
-            name="copy-outline"
-            size={20}
-            color={Colors.primary}
-          />
-
-          <Text style={styles.secondaryText}>
-            Paste from Clipboard
+          <Text style={styles.heading}>
+            Import Public Key
           </Text>
 
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.secondaryButton}
-          onPress={handleScanQR}
-        >
-
-          <Ionicons
-            name="qr-code-outline"
-            size={20}
-            color={Colors.primary}
-          />
-
-          <Text style={styles.secondaryText}>
-            Scan QR Code
+          <Text style={styles.description}>
+            Enter a trusted user's public key or scan their
+            QR code to establish a secure identity.
           </Text>
 
-        </TouchableOpacity>
-
-        <View style={styles.footer}>
-
-          <PrimaryButton
-            title={saving ? "Saving..." : "Save Contact"}
-            onPress={handleSave}
+          <TextInput
+            style={styles.input}
+            multiline
+            placeholder="Paste public key..."
+            placeholderTextColor={Colors.textSecondary}
+            value={publicKey}
+            onChangeText={setPublicKey}
+            autoCapitalize="none"
+            autoCorrect={false}
+            textContentType="none"
           />
 
-        </View>
+          <TouchableOpacity
+            style={styles.secondaryButton}
+            onPress={handlePaste}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name="copy-outline"
+              size={20}
+              color={Colors.primary}
+            />
 
+            <Text style={styles.secondaryText}>
+              Paste from Clipboard
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.secondaryButton}
+            onPress={handleScanQR}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name="qr-code-outline"
+              size={20}
+              color={Colors.primary}
+            />
+
+            <Text style={styles.secondaryText}>
+              Scan QR Code
+            </Text>
+          </TouchableOpacity>
+
+          <View style={styles.footer}>
+            <PrimaryButton
+              title={
+                saving
+                  ? "Saving..."
+                  : "Save Contact"
+              }
+              onPress={handleSave}
+            />
+          </View>
+        </ScrollView>
       </View>
-      </ScrollView>
-
     </Screen>
-
   );
-
 }

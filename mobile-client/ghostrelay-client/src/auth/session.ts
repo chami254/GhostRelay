@@ -2,10 +2,16 @@ import * as Crypto from "expo-crypto";
 
 /* ---------------- SESSION TYPES ---------------- */
 
+export interface Identity {
+  publicKey: string;
+  fingerprint: string;
+}
+
 export interface Session {
   sessionId: string;
   createdAt: number;
   expiresAt: number;
+  identity?: Identity;
 }
 
 export interface SessionResult {
@@ -16,7 +22,7 @@ export interface SessionResult {
 /* ---------------- SESSION SERVICE ---------------- */
 
 export interface SessionService {
-  createSession(): Promise<Session>;
+  createSession(identity?: Session["identity"]): Promise<Session>;
 
   restoreSession(): Promise<SessionResult>;
 
@@ -51,13 +57,16 @@ const SESSION_DURATION = 1000 * 60 * 60;
 
 /* ---------------- CREATE SESSION ---------------- */
 
-async function createSession(): Promise<Session> {
+async function createSession(
+  identity?: Session["identity"]
+): Promise<Session> {
   const now = Date.now();
 
   const session: Session = {
     sessionId: Crypto.randomUUID(),
     createdAt: now,
     expiresAt: now + SESSION_DURATION,
+    identity,
   };
 
   activeSession = session;

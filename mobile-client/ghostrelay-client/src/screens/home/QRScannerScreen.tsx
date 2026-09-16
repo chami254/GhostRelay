@@ -1,25 +1,34 @@
 import React, { useCallback, useEffect, useState } from "react";
+
 import {
   ActivityIndicator,
   Alert,
   Text,
   View,
 } from "react-native";
+
 import {
   CameraView,
   useCameraPermissions,
 } from "expo-camera";
+
 import {
   useFocusEffect,
   useNavigation,
 } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+
+import type {
+  NativeStackNavigationProp,
+} from "@react-navigation/native-stack";
 
 import Screen from "../../components/Screen";
 import Header from "../../components/Header";
 import PrimaryButton from "../../components/PrimaryButton";
 
-import type { RootStackParamList } from "../../navigation/types";
+import type {
+  RootStackParamList,
+} from "../../navigation/types";
+
 import styles from "./QRScannerScreen.styles";
 
 type QRScannerNavigationProp =
@@ -36,12 +45,19 @@ export default function QRScannerScreen() {
   const [permission, requestPermission] =
     useCameraPermissions();
 
-  const [scanned, setScanned] = useState(false);
+  const [scanned, setScanned] =
+    useState(false);
 
   /*
+   * ----------------------------------------------------
+   * CAMERA PERMISSION
+   * ----------------------------------------------------
+   *
    * Request camera permission when the permission state
-   * becomes available and has not yet been granted.
+   * becomes available and permission has not yet been
+   * granted.
    */
+
   useEffect(() => {
     if (!permission || permission.granted) {
       return;
@@ -53,11 +69,17 @@ export default function QRScannerScreen() {
   }, [permission, requestPermission]);
 
   /*
+   * ----------------------------------------------------
+   * RESET SCANNER
+   * ----------------------------------------------------
+   *
    * Reset the scanner whenever the screen becomes active.
    *
-   * This allows the user to return to the scanner and scan
-   * another contact without carrying over the previous scan.
+   * This allows the user to return to the scanner and
+   * scan another contact without carrying over the
+   * previous scan.
    */
+
   useFocusEffect(
     useCallback(() => {
       setScanned(false);
@@ -65,7 +87,39 @@ export default function QRScannerScreen() {
   );
 
   /*
-   * Handle a QR scan.
+   * ----------------------------------------------------
+   * NAVIGATION ACTIONS
+   * ----------------------------------------------------
+   */
+
+  /*
+   * Open the Contacts tab.
+   *
+   * The user can then select a trusted contact and
+   * continue to Compose Message.
+   */
+
+  const openCompose = () => {
+    navigation.navigate("Tabs", {
+      screen: "Contacts",
+    });
+  };
+
+  /*
+   * Display this user's own GhostRelay identity QR code.
+   *
+   * If your navigation route uses another name, change
+   * "MyQRCode" here.
+   */
+
+  const openMyQRCode = () => {
+    navigation.navigate("MyQRCode");
+  };
+
+  /*
+   * ----------------------------------------------------
+   * QR SCANNING
+   * ----------------------------------------------------
    *
    * GhostRelay QR data may contain either:
    *
@@ -74,6 +128,7 @@ export default function QRScannerScreen() {
    *
    * Only the public key is passed to AddContact.
    */
+
   const handleBarcodeScanned = useCallback(
     ({ data }: { data: string }) => {
       if (scanned) {
@@ -103,7 +158,7 @@ export default function QRScannerScreen() {
           typeof parsed.publicKey === "string" &&
           parsed.publicKey.trim().length > 0
         ) {
-          navigation.replace("AddContact", {
+          navigation.navigate("AddContact", {
             publicKey: parsed.publicKey.trim(),
           });
 
@@ -114,14 +169,18 @@ export default function QRScannerScreen() {
          * The QR code was valid JSON but did not contain
          * the identity structure expected by GhostRelay.
          */
+
         throw new Error("Missing public key");
       } catch {
         /*
          * If the QR data isn't JSON, treat it as a raw
-         * public key. AddContact will perform the next
-         * layer of validation.
+         * public key.
+         *
+         * AddContact will perform the next layer of
+         * validation.
          */
-        navigation.replace("AddContact", {
+
+        navigation.navigate("AddContact", {
           publicKey: rawData,
         });
       }
@@ -129,7 +188,11 @@ export default function QRScannerScreen() {
     [navigation, scanned]
   );
 
-  /* ---------------- PERMISSION LOADING ---------------- */
+  /*
+   * ----------------------------------------------------
+   * PERMISSION LOADING
+   * ----------------------------------------------------
+   */
 
   if (!permission) {
     return (
@@ -148,7 +211,11 @@ export default function QRScannerScreen() {
     );
   }
 
-  /* ---------------- PERMISSION DENIED ---------------- */
+  /*
+   * ----------------------------------------------------
+   * PERMISSION DENIED
+   * ----------------------------------------------------
+   */
 
   if (!permission.granted) {
     return (
@@ -183,7 +250,9 @@ export default function QRScannerScreen() {
                 }}
               />
             ) : (
-              <Text style={styles.permissionDeniedText}>
+              <Text
+                style={styles.permissionDeniedText}
+              >
                 Camera permission has been denied. Enable
                 camera access for GhostRelay in your device
                 settings and return here.
@@ -195,7 +264,11 @@ export default function QRScannerScreen() {
     );
   }
 
-  /* ---------------- SCANNER ---------------- */
+  /*
+   * ----------------------------------------------------
+   * SCANNER
+   * ----------------------------------------------------
+   */
 
   return (
     <Screen>
@@ -221,30 +294,48 @@ export default function QRScannerScreen() {
             />
 
             {/* QR scanning frame */}
+
             <View
               pointerEvents="none"
               style={styles.scanFrame}
             >
               <View style={styles.cornerTopLeft} />
+
               <View style={styles.cornerTopRight} />
+
               <View style={styles.cornerBottomLeft} />
+
               <View style={styles.cornerBottomRight} />
             </View>
           </View>
 
           <Text style={styles.instructions}>
-            Position the contact's QR code inside the frame to
-            securely import their public key.
+            Position the contact's QR code inside the frame
+            to securely import their public key.
           </Text>
 
-          {scanned && (
-            <View style={styles.actionContainer}>
+          {/* ------------------------------------------------
+              ACTIONS
+              ------------------------------------------------ */}
+
+          <View style={styles.actionContainer}>
+            <PrimaryButton
+              title="Compose Message"
+              onPress={openCompose}
+            />
+
+            <PrimaryButton
+              title="Show My QR Code"
+              onPress={openMyQRCode}
+            />
+
+            {scanned && (
               <PrimaryButton
                 title="Scan Another QR Code"
                 onPress={() => setScanned(false)}
               />
-            </View>
-          )}
+            )}
+          </View>
         </View>
       </View>
     </Screen>

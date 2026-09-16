@@ -30,10 +30,12 @@ interface AuthContextValue {
 
   session: Session | null;
 
+  identity: Session["identity"];
+
   isAuthenticated: boolean;
   isLocked: boolean;
 
-  createSession: () => Promise<void>;
+  createSession: (identity?: Session["identity"]) => Promise<void>;
   restoreSession: () => Promise<void>;
   lockSession: () => Promise<void>;
   logout: () => Promise<void>;
@@ -61,17 +63,21 @@ export function AuthProvider({
 
   /* ---------------- CREATE SESSION ---------------- */
 
-  async function createSession() {
+  async function createSession(
+    identity?: Session["identity"]
+  ) {
     console.log("AUTH: createSession() START");
-  
+
     const newSession =
-      await sessionService.createSession();
-  
+      await sessionService.createSession(
+        identity
+      );
+
     console.log("AUTH: session created:", newSession);
-  
+
     setSession(newSession);
     setStatus("authenticated");
-  
+
     console.log("AUTH: status set to authenticated");
   }
 
@@ -137,6 +143,8 @@ export function AuthProvider({
       status,
 
       session,
+
+      identity: session?.identity,
 
       isAuthenticated:
         status === "authenticated",

@@ -1,0 +1,20 @@
+{
+  "name": "ghostrelay-security",
+  "version": "0.1.0",
+  "description": "Native GhostRelay security module integrating the Rust security core with Android biometric authentication.",
+  "main": "src/index.ts",
+  "keywords": [
+    "expo",
+    "react-native",
+    "ghostrelay",
+    "security",
+    "rust",
+    "biometric"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "expo": "*",
+    "react": "*",
+    "react-native": "*"
+  }
+}

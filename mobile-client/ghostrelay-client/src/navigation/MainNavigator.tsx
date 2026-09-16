@@ -7,6 +7,7 @@ import TabNavigator from "./TabNavigator";
 import ComposeScreen from "../screens/messaging/ComposeScreen";
 import AddContactScreen from "../screens/home/AddContactScreen";
 import QRScannerScreen from "../screens/home/QRScannerScreen";
+import MyQRCodeScreen from "../screens/messaging/MyQRCodeScreen";
 import ContactAddedScreen from "../screens/home/ContactAddedScreen";
 import ViewerScreen from "../screens/messaging/ViewerScreen";
 import ExpiredScreen from "../screens/messaging/ExpiredScreen";
@@ -25,6 +26,11 @@ export default function MainNavigator() {
       <Stack.Screen
         name="QRScanner"
         component={QRScannerScreen}
+      />
+
+      <Stack.Screen
+        name="MyQRCode"
+        component={MyQRCodeScreen}
       />
 
       <Stack.Screen

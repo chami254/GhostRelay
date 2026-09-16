@@ -1,6 +1,7 @@
 export interface Identity {
   id: string;
   publicKey: string;
+  fingerprint?: string;
   createdAt?: string;
 }
 

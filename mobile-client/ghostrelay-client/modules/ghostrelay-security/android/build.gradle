@@ -8,14 +8,17 @@ version = '0.1.0'
 
 android {
   namespace "expo.modules.ghostrelaysecurity"
+
   defaultConfig {
     versionCode 1
     versionName "0.1.0"
   }
-  lintOptions {
+
+  lint {
     abortOnError false
   }
 }
+
 dependencies {
-    implementation 'androidx.biometric:biometric:1.1.0'
+  implementation "androidx.biometric:biometric:1.1.0"
 }

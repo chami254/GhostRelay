@@ -17,7 +17,17 @@ func RegisterRoutes(
 
 	router.POST("/relay", RelayMessage(service))
 
-	router.GET("/messages/:receiverId", GetMessages(service))
+	router.GET("/messages", GetInbox(service))
+
+	router.GET("/messages/receiver/:receiverId", GetMessages(service))
+
+	router.GET("/messages/:id", GetMessage(service))
+
+	router.POST("/messages", SendMessage(service))
 
 	router.DELETE("/messages/:id", DeleteMessage(service))
+
+	router.POST("/contacts", SaveContact(service))
+
+	router.GET("/contacts", GetContacts(service))
 }

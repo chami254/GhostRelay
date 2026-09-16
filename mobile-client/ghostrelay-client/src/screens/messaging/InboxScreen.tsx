@@ -101,7 +101,7 @@ export default function InboxScreen() {
           })
         }
         accessibilityRole="button"
-        accessibilityLabel={`Message from ${item.sender}`}
+        accessibilityLabel={`Message from ${item.senderId}`}
       >
         <View style={styles.leftSection}>
           <View style={styles.iconContainer}>
@@ -117,7 +117,7 @@ export default function InboxScreen() {
               style={styles.sender}
               numberOfLines={1}
             >
-              {item.sender}
+              {item.senderId}
             </Text>
 
             <Text style={styles.subtitle}>
@@ -125,11 +125,11 @@ export default function InboxScreen() {
             </Text>
 
             <Text style={styles.time}>
-              Received {item.received}
+              Received {item.createdAt}
             </Text>
 
             <Text style={styles.expiration}>
-              Expires in {item.expiresIn}
+              Expires in {item.expiresAt}
             </Text>
           </View>
         </View>

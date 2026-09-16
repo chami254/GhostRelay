@@ -1,10 +1,5 @@
 {
-  "platforms": ["android", "ios"],
-  "ios": {
-    "modules": [
-      "GhostRelaySecurityModule"
-    ]
-  },
+  "platforms": ["android"],
   "android": {
     "modules": ["expo.modules.ghostrelaysecurity.GhostRelaySecurityModule"]
   }

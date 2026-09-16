@@ -2,16 +2,15 @@
 // @version 1.0
 // @description GhostRelay Secure Messaging Relay Server
 // @host localhost:8080
-// @BasePath
+// @BasePath /
 
 package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
-
-	_ "relay-server/cmd/server/docs"
 
 	"relay-server/internal/api"
 	"relay-server/internal/relay"
@@ -19,27 +18,39 @@ import (
 )
 
 func main() {
+	// Use release mode in production.
+	// Render can set GIN_MODE=release as an environment variable.
+	if os.Getenv("GIN_MODE") == "" {
+		gin.SetMode(gin.ReleaseMode)
+	}
 
 	router := gin.Default()
 
-	// Initialize storage
+	// Initialize in-memory storage.
 	store := storage.NewMemoryStore()
 
-	// Initialize relay service
+	// Initialize relay service.
 	relayService := relay.NewRelayService(store)
 
-	// Start automatic cleanup
+	// Start automatic message cleanup.
 	relayService.StartCleanupWorker()
 
-	// Register API routes
+	// Register API routes.
 	api.RegisterRoutes(router, relayService)
+
+	// Render provides the PORT environment variable.
+	// Fall back to 8080 for local development.
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "10000"
+	}
 
 	log.Println("=====================================")
 	log.Println(" GhostRelay Relay Server")
-	log.Println(" Listening on http://0.0.0.0:8080")
+	log.Printf(" Listening on 0.0.0.0:%s", port)
 	log.Println("=====================================")
 
-	if err := router.Run("0.0.0.0:8080"); err != nil {
+	if err := router.Run("0.0.0.0:" + port); err != nil {
 		log.Fatal(err)
 	}
 }

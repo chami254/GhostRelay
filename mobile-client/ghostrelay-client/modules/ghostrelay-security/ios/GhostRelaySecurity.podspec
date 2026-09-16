@@ -1,30 +1,24 @@
 Pod::Spec.new do |s|
-
-  s.name         = 'GhostRelaySecurity'
-  s.version      = '0.1.0'
-
-  s.summary      = 'Native biometric security module for GhostRelay'
-  s.description  = 'Provides native biometric authentication and availability checks for the GhostRelay secure messaging application.'
-
-  s.author       = 'GhostRelay Development Team'
-  s.homepage     = 'https://github.com/'
-
-  s.platforms    = {
-    :ios => '16.4'
+  s.name           = 'GhostRelaySecurity'
+  s.version        = '1.0.0'
+  s.summary        = 'A sample project summary'
+  s.description    = 'A sample project description'
+  s.author         = ''
+  s.homepage       = 'https://docs.expo.dev/modules/'
+  s.platforms      = {
+    :ios => '16.4',
+    :tvos => '16.4'
   }
-
-  s.source       = { git: '' }
-
+  s.source         = { git: '' }
   s.static_framework = true
 
   s.dependency 'ExpoModulesCore'
+  s.dependency 'ExpoUI'
 
-  s.framework = 'LocalAuthentication'
-
+  # Swift/Objective-C compatibility
   s.pod_target_xcconfig = {
-    'DEFINES_MODULE' => 'YES'
+    'DEFINES_MODULE' => 'YES',
   }
 
   s.source_files = "**/*.{h,m,mm,swift,hpp,cpp}"
-
 end

@@ -9,6 +9,8 @@ export interface Contact {
   name: string;
   publicKey: string;
   fingerprint: string;
+  alias?: string;
+  createdAt?: string;
 }
 
 export async function saveContact(

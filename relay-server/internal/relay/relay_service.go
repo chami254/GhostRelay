@@ -55,6 +55,18 @@ func (r *RelayService) GetPendingMessages(receiverID string) []models.Message {
 
 }
 
+func (r *RelayService) GetAllPendingMessages() []models.Message {
+
+	return r.store.GetAllMessages()
+
+}
+
+func (r *RelayService) GetMessage(messageID string) (models.Message, bool) {
+
+	return r.store.GetMessage(messageID)
+
+}
+
 func (r *RelayService) MarkDelivered(messageID string) {
 
 	r.store.MarkDelivered(messageID)
@@ -70,6 +82,18 @@ func (r *RelayService) CleanupExpired() {
 func (r *RelayService) MessageCount() int {
 
 	return r.store.MessageCount()
+
+}
+
+func (r *RelayService) SaveContact(
+	request models.ContactRequest,
+) (models.Contact, error) {
+	return r.store.SaveContact(request)
+}
+
+func (r *RelayService) GetContacts() []models.Contact {
+
+	return r.store.GetContacts()
 
 }
 

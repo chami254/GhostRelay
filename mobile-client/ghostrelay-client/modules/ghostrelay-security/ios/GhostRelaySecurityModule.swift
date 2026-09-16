@@ -1,122 +1,53 @@
 import ExpoModulesCore
-import LocalAuthentication
+import ExpoUI
 
-public class GhostRelaySecurityModule: Module {
+public class GhostrelaySecurityModule: Module {
+  public func definition() -> ModuleDefinition {
+    Name("GhostrelaySecurity")
 
-    public func definition() -> ModuleDefinition {
+    Events("onChange")
 
-        Name("GhostRelaySecurity")
-
-        // ---------------------------------------------------------
-        // MODULE TEST
-        // ---------------------------------------------------------
-
-        Function("isAvailable") {
-            return true
-        }
-
-        // ---------------------------------------------------------
-        // BIOMETRIC AVAILABILITY
-        // ---------------------------------------------------------
-
-        Function("isBiometricAvailable") {
-
-            let context = LAContext()
-            var error: NSError?
-
-            let available = context.canEvaluatePolicy(
-                .deviceOwnerAuthenticationWithBiometrics,
-                error: &error
-            )
-
-            return available
-        }
-
-        // ---------------------------------------------------------
-        // BIOMETRIC AUTHENTICATION
-        // ---------------------------------------------------------
-
-        AsyncFunction("authenticate") { (promise: Promise) in
-
-            let context = LAContext()
-
-            context.localizedCancelTitle = "Cancel"
-
-            var error: NSError?
-
-            guard context.canEvaluatePolicy(
-                .deviceOwnerAuthenticationWithBiometrics,
-                error: &error
-            ) else {
-
-                promise.resolve([
-                    "success": false,
-                    "error": "biometric_unavailable"
-                ])
-
-                return
-            }
-
-            let reason =
-                "Authenticate to access GhostRelay."
-
-            context.evaluatePolicy(
-                .deviceOwnerAuthenticationWithBiometrics,
-                localizedReason: reason
-            ) { success, authenticationError in
-
-                DispatchQueue.main.async {
-
-                    if success {
-
-                        promise.resolve([
-                            "success": true,
-                            "error": NSNull()
-                        ])
-
-                    } else {
-
-                        var errorCode = "authentication_failed"
-
-                        if let laError =
-                            authenticationError as? LAError {
-
-                            switch laError.code {
-
-                            case .userCancel:
-                                errorCode = "user_cancel"
-
-                            case .systemCancel:
-                                errorCode = "system_cancel"
-
-                            case .biometryNotAvailable:
-                                errorCode = "not_available"
-
-                            case .biometryNotEnrolled:
-                                errorCode = "not_enrolled"
-
-                            case .biometryLockout:
-                                errorCode = "lockout"
-
-                            case .authenticationFailed:
-                                errorCode = "authentication_failed"
-
-                            case .userFallback:
-                                errorCode = "user_fallback"
-
-                            default:
-                                errorCode = "unknown"
-                            }
-                        }
-
-                        promise.resolve([
-                            "success": false,
-                            "error": errorCode
-                        ])
-                    }
-                }
-            }
-        }
-        .runOnQueue(.main)
+    Constant("PI") {
+      Double.pi
     }
+
+    Function("hello") {
+      return "Hello world! 👋"
+    }
+
+    AsyncFunction("setValueAsync") { (value: String) in
+      self.sendEvent("onChange", [
+        "value": value
+      ])
+    }
+
+    View(GhostrelaySecurityView.self) {
+      Events("onTap")
+    }
+
+    Class(GhostrelaySecurityModuleSharedObject.self) {
+      Constructor { () -> GhostrelaySecurityModuleSharedObject in
+        return GhostrelaySecurityModuleSharedObject()
+      }
+
+      Property("count") { (ref: GhostrelaySecurityModuleSharedObject) -> Int in
+        return ref.count
+      }
+      .set { (ref: GhostrelaySecurityModuleSharedObject, count: Int) in
+        ref.count = count
+      }
+    }
+
+    ExpoUIView(GhostrelaySecuritySwiftUIView.self)
+
+    OnCreate {
+      ViewModifierRegistry.register("ghostrelaySecuritySwiftUIModifier") { params, appContext, _ in
+        return try GhostrelaySecuritySwiftUIModifier(from: params, appContext: appContext)
+      }
+    }
+
+    OnDestroy {
+      ViewModifierRegistry.unregister("ghostrelaySecuritySwiftUIModifier")
+    }
+  }
 }

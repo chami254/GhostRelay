@@ -1,11 +1,14 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
+
 import {
   FlatList,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 
 import Screen from "../../components/Screen";
 import SearchBar from "../../components/SearchBar";
@@ -14,6 +17,8 @@ import ContactCard from "../../components/ContactCard";
 
 import { useRootNavigation } from "../../navigation/hooks";
 import type { Contact as NavigationContact } from "../../navigation/types";
+
+import { getContacts } from "../../api/contacts";
 
 import styles from "./HomeScreen.styles";
 
@@ -29,32 +34,70 @@ export default function HomeScreen() {
   const [contacts, setContacts] = useState<HomeContact[]>([]);
 
   /*
-   * Contacts are intentionally isolated from the UI.
+   * --------------------------------------------------
+   * LOAD CONTACTS
+   * --------------------------------------------------
    *
-   * The real contacts API/database will be connected here
-   * during the server API integration phase.
+   * Contacts are stored by the relay server.
+   *
+   * Home retrieves the latest contacts whenever the
+   * screen becomes focused.
    */
   const loadContacts = useCallback(async () => {
     try {
-      // TODO: Replace with the real contacts repository/API.
-      setContacts([]);
+      const savedContacts = await getContacts();
+
+      const homeContacts: HomeContact[] = savedContacts.map(
+        (contact) => ({
+          ...contact,
+
+          /*
+           * The relay currently does not provide presence
+           * information, so these are UI defaults.
+           */
+          lastSeen: "Unknown",
+          online: false,
+        })
+      );
+
+      setContacts(homeContacts);
+
+      console.log(
+        "HOME: contacts loaded:",
+        homeContacts.length
+      );
     } catch (error) {
-      console.error("Failed to load contacts:", error);
+      console.error(
+        "HOME: failed to load contacts:",
+        error
+      );
+
       setContacts([]);
     }
   }, []);
 
-  useEffect(() => {
-    void loadContacts();
-  }, [loadContacts]);
+  /*
+   * --------------------------------------------------
+   * REFRESH WHEN HOME SCREEN IS FOCUSED
+   * --------------------------------------------------
+   *
+   * This is important because HomeScreen may remain
+   * mounted while the user navigates to AddContact.
+   *
+   * When the user returns to Home, contacts are fetched
+   * again instead of relying on the old state.
+   */
+  useFocusEffect(
+    useCallback(() => {
+      void loadContacts();
+    }, [loadContacts])
+  );
 
   /*
-   * Home must not generate a new Rust identity.
-   *
-   * Identity creation is handled during onboarding and the
-   * authentication/security layer owns that lifecycle.
+   * --------------------------------------------------
+   * FILTER CONTACTS
+   * --------------------------------------------------
    */
-
   const filteredContacts = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
 
@@ -63,10 +106,17 @@ export default function HomeScreen() {
     }
 
     return contacts.filter((contact) =>
-      contact.name.toLowerCase().includes(normalizedSearch)
+      contact.name
+        .toLowerCase()
+        .includes(normalizedSearch)
     );
   }, [contacts, search]);
 
+  /*
+   * --------------------------------------------------
+   * NAVIGATION
+   * --------------------------------------------------
+   */
   const handleStartNewMessage = () => {
     navigation.navigate("AddContact");
   };
@@ -86,10 +136,13 @@ export default function HomeScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.listContent}
+
           ListHeaderComponent={
             <View>
               <View style={styles.header}>
-                <Text style={styles.title}>GhostRelay</Text>
+                <Text style={styles.title}>
+                  GhostRelay
+                </Text>
 
                 <TouchableOpacity
                   onPress={handleStartNewMessage}
@@ -120,15 +173,19 @@ export default function HomeScreen() {
               </Text>
             </View>
           }
+
           renderItem={({ item }) => (
             <ContactCard
               name={item.name}
               lastSeen={item.lastSeen}
               online={item.online}
               fingerprint={item.fingerprint}
-              onPress={() => handleContactPress(item)}
+              onPress={() =>
+                handleContactPress(item)
+              }
             />
           )}
+
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Ionicons

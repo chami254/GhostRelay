@@ -6,6 +6,8 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+
+
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.ghostrelay.client",
@@ -14,6 +16,7 @@
         "ITSAppUsesNonExemptEncryption": false
       }
     },
+
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -24,13 +27,16 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.anonymous.ghostrelayclient"
     },
+
     "web": {
       "favicon": "./assets/favicon.png"
     },
+
     "plugins": [
       "expo-secure-store",
       "expo-font"
     ],
+
     "extra": {
       "eas": {
         "projectId": "2a4fc41a-aa8b-41e4-ac50-a6ef0435182f"

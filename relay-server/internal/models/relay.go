@@ -10,6 +10,16 @@ type RelayRequest struct {
 	Nonce string `json:"nonce"`
 }
 
+type SendRequest struct {
+	SenderID string `json:"senderId"`
+
+	ReceiverID string `json:"receiverId"`
+
+	Ciphertext string `json:"ciphertext"`
+
+	Nonce string `json:"nonce"`
+}
+
 type RelayResponse struct {
 	Success bool `json:"success"`
 

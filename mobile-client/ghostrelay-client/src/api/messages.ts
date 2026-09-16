@@ -1,19 +1,16 @@
 import { apiFetch } from "./client";
+
 import type {
+  Message,
   RelayRequest,
 } from "./types";
 
-export interface SecureMessage {
-  id: string;
-  sender: string;
-  body: string;
+export interface SecureMessage extends Message {
+  expiresAt?: string;
 }
 
-export interface InboxMessage {
-  id: string;
-  sender: string;
-  received: string;
-  expiresIn: string;
+export interface InboxMessage extends Message {
+  expiresAt: string;
 }
 
 export interface SendMessageResponse {
@@ -44,13 +41,10 @@ export async function deleteMessage(
 }
 
 export async function sendMessage(
-  message: RelayRequest
+  request: RelayRequest
 ): Promise<SendMessageResponse> {
-  return apiFetch<SendMessageResponse>(
-    "/messages",
-    {
-      method: "POST",
-      body: JSON.stringify(message),
-    }
-  );
+  return apiFetch<SendMessageResponse>("/messages", {
+    method: "POST",
+    body: JSON.stringify(request),
+  });
 }

@@ -31,9 +31,11 @@ export interface Contact {
 export type RootStackParamList = {
   Tabs: NavigatorScreenParams<TabParamList>;
 
-  Compose: {
-    contact: Contact;
-  };
+  Compose:
+  | {
+      contact?: Contact;
+    }
+  | undefined;
 
   AddContact:
     | {
@@ -42,6 +44,8 @@ export type RootStackParamList = {
     | undefined;
 
   QRScanner: undefined;
+
+  MyQRCode: undefined;
 
   ContactAdded: {
     contact: Contact;

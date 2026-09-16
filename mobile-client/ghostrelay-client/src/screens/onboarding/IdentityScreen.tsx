@@ -1,10 +1,12 @@
 import React, { useState } from "react";
+
 import {
-  NativeModules,
   View,
   Text,
   Alert,
 } from "react-native";
+
+import { generateIdentity } from "../../../modules/ghostrelay-security/src";
 
 import Screen from "../../components/Screen";
 import Header from "../../components/Header";
@@ -16,91 +18,65 @@ import { Colors } from "../../theme";
 import { registerIdentity } from "../../api/identity";
 import { useAuth } from "../../auth/AuthContext";
 
-interface RustIdentityResult {
-  publicKey: string;
-  fingerprint: string;
-}
-
-interface GhostRelaySecurityModule {
-  generateIdentity: () =>
-    Promise<RustIdentityResult | string>;
-}
-
 export default function IdentityScreen() {
   const { createSession } = useAuth();
-
-  const security =
-    NativeModules.GhostRelaySecurity as
-      | GhostRelaySecurityModule
-      | undefined;
 
   const [publicKey, setPublicKey] = useState("");
   const [fingerprint, setFingerprint] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleGenerateIdentity() {
-    if (loading) {
-      return;
-    }
-
-    if (!security) {
-      Alert.alert(
-        "Security Core Unavailable",
-        "The GhostRelay security module is not available on this device."
-      );
-      return;
-    }
-
-    if (
-      typeof security.generateIdentity !== "function"
-    ) {
-      Alert.alert(
-        "Security Core Error",
-        "The GhostRelay identity generation function is unavailable."
-      );
-      return;
-    }
+    console.log("=== GENERATE IDENTITY PRESSED ===");
 
     try {
-      setLoading(true);
+      console.log("=== ABOUT TO CALL generateIdentity() ===");
+  
+      const result = await generateIdentity();
+  
+      console.log("=== generateIdentity RETURNED ===", result);
+  
+      // existing code...
+    } catch (error) {
+      console.error("=== IDENTITY CREATION ERROR ===", error);
+    }
 
+    if (loading) {
+      console.log("=== GENERATE IDENTITY: ALREADY LOADING ===");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
       /*
-       * Generate the identity inside the Rust security core.
+       * Generate the identity through the GhostRelay native
+       * security module.
+       *
+       * The actual identity generation occurs inside the
+       * Rust security core through the Kotlin bridge.
+       *
+       * React Native receives only:
+       * - publicKey
+       * - fingerprint
        *
        * The private key remains inside the native security layer.
-       * React Native receives only the public identity information.
        */
-      const rawResult =
-        await security.generateIdentity();
 
       console.log(
-        "RUST BRIDGE RESULT:",
-        rawResult
+        "=== CALLING GhostRelay SECURITY MODULE ==="
+      );
+
+      const result = await generateIdentity();
+
+      console.log(
+        "=== RUST BRIDGE RESULT ===",
+        result
       );
 
       /*
-       * The native bridge currently returns a React Native
-       * object, but we continue supporting a JSON string in
-       * case the native implementation changes.
+       * Validate the identity returned by the native layer.
        */
-      let result: RustIdentityResult;
 
-      if (typeof rawResult === "string") {
-        try {
-          result = JSON.parse(rawResult);
-        } catch {
-          throw new Error(
-            "The Rust security core returned invalid identity data."
-          );
-        }
-      } else {
-        result = rawResult;
-      }
-
-      /*
-       * Validate the public identity before doing anything
-       * with it.
-       */
       if (
         !result ||
         typeof result.publicKey !== "string" ||
@@ -116,6 +92,7 @@ export default function IdentityScreen() {
       /*
        * Display the public identity information.
        */
+
       setPublicKey(result.publicKey);
       setFingerprint(result.fingerprint);
 
@@ -124,6 +101,11 @@ export default function IdentityScreen() {
        *
        * The private key never leaves the native security layer.
        */
+
+      console.log(
+        "=== REGISTERING PUBLIC IDENTITY ==="
+      );
+
       await registerIdentity({
         id: result.fingerprint,
         publicKey: result.publicKey,
@@ -136,15 +118,19 @@ export default function IdentityScreen() {
       /*
        * Create the application session.
        *
-       * AuthContext will change the status to "authenticated".
-       * ApplicationGate will then automatically replace the
-       * onboarding navigator with MainNavigator.
+       * AuthContext will change the authentication state.
+       * ApplicationGate then controls the transition into
+       * the authenticated application.
        */
+
       console.log(
         "AUTH: createSession() START"
       );
 
-      await createSession();
+      await createSession({
+        publicKey: result.publicKey,
+        fingerprint: result.fingerprint,
+      });
 
       console.log(
         "IDENTITY: createSession() completed"
@@ -155,17 +141,26 @@ export default function IdentityScreen() {
        *
        * ApplicationGate owns the authentication transition.
        */
+
     } catch (error) {
       console.error(
-        "IDENTITY CREATION ERROR:",
+        "=== IDENTITY CREATION ERROR ===",
         error
+      );
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : String(error);
+
+      console.error(
+        "=== IDENTITY ERROR MESSAGE ===",
+        message
       );
 
       Alert.alert(
         "Identity Creation Failed",
-        error instanceof Error
-          ? error.message
-          : "Unable to create your GhostRelay identity."
+        message
       );
     } finally {
       setLoading(false);

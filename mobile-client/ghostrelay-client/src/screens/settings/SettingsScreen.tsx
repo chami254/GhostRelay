@@ -280,12 +280,16 @@ export default function SettingsScreen() {
               icon="qr-code-outline"
               title="My QR Code"
               subtitle="Display your public identity"
-              onPress={() =>
-                showUnavailable(
-                  "My QR Code",
-                  "Your identity QR display will be enabled during the identity-sharing integration."
-                )
-              }
+              onPress={() => {
+                const parent =
+                  navigation.getParent();
+
+                if (parent) {
+                  parent.navigate("MyQRCode");
+                } else {
+                  navigation.navigate("MyQRCode");
+                }
+              }}
             />
 
             <SettingsItem

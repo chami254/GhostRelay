@@ -211,11 +211,11 @@ export default function ContactsScreen() {
           keyExtractor={(item) => item.id}
           renderItem={renderContact}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={
-            contacts.length === 0
-              ? styles.listEmptyContainer
-              : styles.listContent
-          }
+          //contentContainerStyle={
+           // contacts.length === 20
+           //   ? styles.listEmptyContainer
+           //   : styles.listContent
+         // }
           refreshing={refreshing}
           onRefresh={() => loadContacts(true)}
           ListEmptyComponent={

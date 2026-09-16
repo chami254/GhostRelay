@@ -5,8 +5,7 @@ import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
+import expo.modules.kotlin.Promise
 
 object BiometricAuthenticator {
 
@@ -16,29 +15,46 @@ object BiometricAuthenticator {
             return false
         }
 
-        val manager = BiometricManager.from(context)
+        val biometricManager = BiometricManager.from(context)
 
-        val result = manager.canAuthenticate(
+        return biometricManager.canAuthenticate(
             BiometricManager.Authenticators.BIOMETRIC_STRONG
-        )
-
-        return result == BiometricManager.BIOMETRIC_SUCCESS
+        ) == BiometricManager.BIOMETRIC_SUCCESS
     }
 
-    suspend fun authenticate(
-        context: Context?
-    ): Map<String, Any> = suspendCoroutine { continuation ->
+    fun authenticate(
+        context: Context?,
+        promise: Promise
+    ) {
 
         val activity = context as? FragmentActivity
 
         if (activity == null) {
-            continuation.resume(
+            promise.resolve(
                 mapOf(
                     "authenticated" to false,
-                    "method" to "unavailable"
+                    "method" to "unavailable",
+                    "message" to "GhostRelay requires an Android activity."
                 )
             )
-            return@suspendCoroutine
+            return
+        }
+
+        val biometricManager = BiometricManager.from(activity)
+
+        val availability = biometricManager.canAuthenticate(
+            BiometricManager.Authenticators.BIOMETRIC_STRONG
+        )
+
+        if (availability != BiometricManager.BIOMETRIC_SUCCESS) {
+            promise.resolve(
+                mapOf(
+                    "authenticated" to false,
+                    "method" to "unavailable",
+                    "errorCode" to availability
+                )
+            )
+            return
         }
 
         val executor = ContextCompat.getMainExecutor(activity)
@@ -51,7 +67,7 @@ object BiometricAuthenticator {
                 override fun onAuthenticationSucceeded(
                     result: BiometricPrompt.AuthenticationResult
                 ) {
-                    continuation.resume(
+                    promise.resolve(
                         mapOf(
                             "authenticated" to true,
                             "method" to "biometric"
@@ -60,7 +76,7 @@ object BiometricAuthenticator {
                 }
 
                 override fun onAuthenticationFailed() {
-                    continuation.resume(
+                    promise.resolve(
                         mapOf(
                             "authenticated" to false,
                             "method" to "failed"
@@ -72,7 +88,7 @@ object BiometricAuthenticator {
                     errorCode: Int,
                     errString: CharSequence
                 ) {
-                    continuation.resume(
+                    promise.resolve(
                         mapOf(
                             "authenticated" to false,
                             "method" to "error",

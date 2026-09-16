@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"errors"
 	"sync"
 	"time"
 
@@ -15,6 +16,8 @@ type MemoryStore struct {
 	identities map[string]models.Identity
 
 	messages map[string]models.Message
+
+	contacts map[string]models.Contact
 }
 
 func NewMemoryStore() *MemoryStore {
@@ -22,6 +25,7 @@ func NewMemoryStore() *MemoryStore {
 	return &MemoryStore{
 		identities: make(map[string]models.Identity),
 		messages:   make(map[string]models.Message),
+		contacts:   make(map[string]models.Contact),
 	}
 
 }
@@ -100,6 +104,44 @@ func (s *MemoryStore) GetMessages(receiverID string) []models.Message {
 
 }
 
+func (s *MemoryStore) GetAllMessages() []models.Message {
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var all []models.Message
+
+	now := time.Now()
+
+	for _, msg := range s.messages {
+
+		if msg.Delivered {
+			continue
+		}
+
+		if msg.ExpiresAt.Before(now) {
+			continue
+		}
+
+		all = append(all, msg)
+
+	}
+
+	return all
+
+}
+
+func (s *MemoryStore) GetMessage(messageID string) (models.Message, bool) {
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	msg, exists := s.messages[messageID]
+
+	return msg, exists
+
+}
+
 func (s *MemoryStore) MarkDelivered(messageID string) {
 
 	s.mu.Lock()
@@ -142,5 +184,67 @@ func (s *MemoryStore) MessageCount() int {
 	defer s.mu.RUnlock()
 
 	return len(s.messages)
+
+}
+
+func (s *MemoryStore) SaveContact(request models.ContactRequest) (models.Contact, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	/*
+	 * A contact is associated with an already registered
+	 * GhostRelay identity by matching its public key.
+	 *
+	 * The identity ID is the fingerprint registered during
+	 * identity creation.
+	 */
+	var identity models.Identity
+	var found bool
+
+	for _, registeredIdentity := range s.identities {
+		if registeredIdentity.PublicKey == request.PublicKey {
+			identity = registeredIdentity
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return models.Contact{}, errors.New(
+			"no registered identity matches the supplied public key",
+		)
+	}
+
+	/*
+	 * The identity fingerprint is now the contact ID.
+	 *
+	 * This is important because /messages validates
+	 * receiverId against the identity registry.
+	 */
+	contact := models.Contact{
+		ID:          identity.ID,
+		Name:        "Contact",
+		PublicKey:   identity.PublicKey,
+		Fingerprint: identity.ID,
+		CreatedAt:   time.Now(),
+	}
+
+	s.contacts[contact.ID] = contact
+
+	return contact, nil
+}
+
+func (s *MemoryStore) GetContacts() []models.Contact {
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var contacts []models.Contact
+
+	for _, contact := range s.contacts {
+		contacts = append(contacts, contact)
+	}
+
+	return contacts
 
 }

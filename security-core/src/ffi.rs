@@ -6,26 +6,31 @@ use serde::Serialize;
 
 use crate::Identity;
 
-/// JSON returned to the Android layer.
+/// Public identity information returned to the native layer.
+///
+/// No private key material is included.
 #[derive(Serialize)]
 struct IdentityResponse {
     #[serde(rename = "publicKey")]
     public_key: String,
+
+    #[serde(rename = "signingPublicKey")]
+    signing_public_key: String,
 
     #[serde(rename = "fingerprint")]
     fingerprint: String,
 }
 
 #[no_mangle]
-pub extern "system" fn Java_com_anonymous_ghostrelayclient_security_RustBridge_generateIdentity(
-     env: JNIEnv,
+pub extern "system" fn Java_expo_modules_ghostrelaysecurity_RustBridge_generateIdentityNative(
+    env: JNIEnv,
     _class: JClass,
 ) -> jstring {
-
     let identity = Identity::generate();
 
     let response = IdentityResponse {
         public_key: identity.public_key(),
+        signing_public_key: identity.signing_public_key(),
         fingerprint: identity.fingerprint(),
     };
 

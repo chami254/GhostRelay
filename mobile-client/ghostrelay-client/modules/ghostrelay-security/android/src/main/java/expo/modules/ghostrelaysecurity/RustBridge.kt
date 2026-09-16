@@ -3,7 +3,7 @@ package expo.modules.ghostrelaysecurity
 object RustBridge {
 
     init {
-        System.loadLibrary("ghostrelay")
+        System.loadLibrary("ghostrelay_security")
     }
 
     external fun generateIdentityNative(): String

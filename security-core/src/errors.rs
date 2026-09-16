@@ -2,7 +2,6 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum GhostRelayError {
-
     // ===========================
     // Identity
     // ===========================
@@ -48,6 +47,9 @@ pub enum GhostRelayError {
     #[error("Signature verification failed.")]
     VerificationFailed,
 
+    #[error("Invalid signature.")]
+    InvalidSignature,
+
     // ===========================
     // Encoding
     // ===========================
@@ -64,6 +66,12 @@ pub enum GhostRelayError {
     // ===========================
     // Relay Messages
     // ===========================
+
+    #[error("Invalid relay message.")]
+    InvalidMessage,
+
+    #[error("Unsupported cryptographic algorithm.")]
+    UnsupportedAlgorithm,
 
     #[error("Message has expired.")]
     MessageExpired,
@@ -93,7 +101,4 @@ pub enum GhostRelayError {
 
     #[error("Unknown security error.")]
     Unknown,
-
-    #[error("Invalid signature.")]
-    InvalidSignature,
 }

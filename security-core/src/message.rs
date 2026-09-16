@@ -2,39 +2,58 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-/// Encrypted relay message.
+/// Protocol identifier for the current GhostRelay message format.
+pub const GHOSTRELAY_ALGORITHM: &str =
+    "X25519-SHA256-XChaCha20-Poly1305-Ed25519";
+
+/// Encrypted GhostRelay relay message.
 ///
-/// The relay server never sees plaintext.
-/// It only stores this encrypted payload until expiry.
+/// The relay server handles this structure as an opaque encrypted
+/// message packet. It must never receive plaintext or private key
+/// material.
+///
+/// Cryptographic processing is performed by the security core;
+/// this structure represents the resulting protocol message.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RelayMessage {
     /// Unique message identifier.
+    ///
+    /// This identifier is part of the message protocol and is used
+    /// for replay and consumption tracking.
     pub id: Uuid,
 
-    /// Sender's public key (Base64).
+    /// Sender identity ID / fingerprint.
     pub sender: String,
 
-    /// Recipient's public key (Base64).
+    /// Recipient identity ID / fingerprint.
     pub recipient: String,
 
-    /// Encrypted payload (Base64).
+    /// XChaCha20-Poly1305 authenticated ciphertext, Base64 encoded.
     pub ciphertext: String,
 
-    /// ChaCha20-Poly1305 nonce (Base64).
+    /// XChaCha20-Poly1305 24-byte nonce, Base64 encoded.
     pub nonce: String,
 
-    /// Ed25519 signature (Base64).
+    /// Ed25519 signature over the protocol-defined signed message
+    /// representation, Base64 encoded.
     pub signature: String,
 
-    /// Creation timestamp.
+    /// Cryptographic algorithm identifier.
+    pub algorithm: String,
+
+    /// Time at which the message was created.
     pub created_at: DateTime<Utc>,
 
-    /// Expiration timestamp.
+    /// Time after which the message must no longer be accepted.
     pub expires_at: DateTime<Utc>,
 }
 
 impl RelayMessage {
-    /// Construct a new encrypted relay message.
+    /// Construct a new relay message.
+    ///
+    /// The message ID and creation timestamp are generated locally.
+    /// The signature is supplied after the protocol-defined signed
+    /// representation has been produced.
     pub fn new(
         sender: String,
         recipient: String,
@@ -50,24 +69,29 @@ impl RelayMessage {
             ciphertext,
             nonce,
             signature,
+            algorithm: GHOSTRELAY_ALGORITHM.to_string(),
             created_at: Utc::now(),
             expires_at,
         }
     }
 
-    /// Returns true if the relay message has expired.
+    /// Returns true if the message has reached or passed its
+    /// expiration time.
     pub fn is_expired(&self) -> bool {
         Utc::now() >= self.expires_at
     }
 
-    /// Remaining lifetime in seconds.
+    /// Returns the remaining message lifetime in seconds.
+    ///
+    /// Expired messages return zero rather than a negative value.
     pub fn seconds_remaining(&self) -> i64 {
         (self.expires_at - Utc::now())
             .num_seconds()
             .max(0)
     }
 
-    /// Convenience helper for relay cleanup.
+    /// Indicates whether the message should be removed by relay
+    /// cleanup.
     pub fn should_delete(&self) -> bool {
         self.is_expired()
     }

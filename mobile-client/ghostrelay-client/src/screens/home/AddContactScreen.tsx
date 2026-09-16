@@ -108,7 +108,7 @@ export default function AddContactScreen() {
         publicKey: trimmedKey,
       });
 
-      navigation.replace("ContactAdded", {
+      navigation.navigate("ContactAdded", {
         contact: savedContact,
       });
     } catch (error) {

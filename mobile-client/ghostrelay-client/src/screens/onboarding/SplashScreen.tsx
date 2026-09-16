@@ -29,7 +29,7 @@ export default function SplashScreen() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigation.replace("Welcome");
+      navigation.navigate("Welcome");
     }, 2000);
 
     return () => {

@@ -1,41 +1,97 @@
 use base64::{engine::general_purpose::STANDARD, Engine};
-use rand_core::OsRng;
-use sha2::{Digest, Sha256};
-use x25519_dalek::{PublicKey, StaticSecret};
-use zeroize::Zeroize;
 
-#[derive(Clone)]
+use ed25519_dalek::{SigningKey, VerifyingKey};
+
+use rand_core::OsRng;
+
+use sha2::{Digest, Sha256};
+
+use x25519_dalek::{PublicKey, StaticSecret};
+
+/// A GhostRelay cryptographic identity.
+///
+/// Each identity owns two separate cryptographic key systems:
+///
+/// - X25519: key agreement
+/// - Ed25519: digital signatures
+///
+/// Private key material remains inside the security core.
+/// Public keys may be exported for identity exchange.
 pub struct Identity {
-    secret: StaticSecret,
-    public: PublicKey,
+    x25519_secret: StaticSecret,
+    x25519_public: PublicKey,
+
+    signing_key: SigningKey,
+    verifying_key: VerifyingKey,
 }
 
 impl Identity {
-    /// Generate a new X25519 identity.
-    pub fn generate() -> Self {
-        let secret = StaticSecret::random_from_rng(OsRng);
-        let public = PublicKey::from(&secret);
-
-        Self { secret, public }
-    }
-
-    /// Export the public key as Base64.
-    pub fn public_key(&self) -> String {
-        STANDARD.encode(self.public.as_bytes())
-    }
-
-    /// Export the private key as Base64.
+    /// Generate a new GhostRelay identity.
     ///
-    /// This should only be used by the native layer
-    /// (Android/iOS) for secure storage.
-    pub fn private_key(&self) -> String {
-        STANDARD.encode(self.secret.to_bytes())
+    /// This creates:
+    /// - a fresh X25519 keypair for key agreement
+    /// - a fresh Ed25519 keypair for signatures
+    pub fn generate() -> Self {
+        let x25519_secret = StaticSecret::random_from_rng(OsRng);
+        let x25519_public = PublicKey::from(&x25519_secret);
+
+        let signing_key = SigningKey::generate(&mut OsRng);
+        let verifying_key = signing_key.verifying_key();
+
+        Self {
+            x25519_secret,
+            x25519_public,
+            signing_key,
+            verifying_key,
+        }
     }
 
-    /// Generate a human-readable fingerprint
-    /// from the public key.
+    // =========================================================
+    // X25519
+    // =========================================================
+
+    /// Export the X25519 public key as Base64.
+    pub fn public_key(&self) -> String {
+        STANDARD.encode(self.x25519_public.as_bytes())
+    }
+
+    /// Export the X25519 private key as Base64.
+    ///
+    /// This is intended only for the native/platform secure-storage
+    /// boundary. It must never be exposed to React Native JavaScript.
+    pub(crate) fn private_key(&self) -> String {
+        STANDARD.encode(self.x25519_secret.to_bytes())
+    }
+
+    /// Borrow the X25519 public key internally.
+    pub fn public(&self) -> &PublicKey {
+        &self.x25519_public
+    }
+
+    /// Borrow the X25519 secret internally.
+    pub(crate) fn secret(&self) -> &StaticSecret {
+        &self.x25519_secret
+    }
+
+    /// Export the raw X25519 public key bytes.
+    pub fn public_bytes(&self) -> [u8; 32] {
+        self.x25519_public.to_bytes()
+    }
+
+    /// Export the raw X25519 private key bytes.
+    ///
+    /// This remains restricted to the Rust crate.
+    pub(crate) fn private_bytes(&self) -> [u8; 32] {
+        self.x25519_secret.to_bytes()
+    }
+
+    /// Generate the GhostRelay identity fingerprint.
+    ///
+    /// The fingerprint is the first 16 bytes of SHA-256 over
+    /// the X25519 public key, represented as uppercase hexadecimal
+    /// byte pairs separated by colons.
     pub fn fingerprint(&self) -> String {
-        let hash = Sha256::digest(self.public.as_bytes());
+        let hash = Sha256::digest(self.x25519_public.as_bytes());
 
         hash[..16]
             .iter()
@@ -44,30 +100,27 @@ impl Identity {
             .join(":")
     }
 
-    /// Borrow the public key internally.
-    pub fn public(&self) -> &PublicKey {
-        &self.public
+    // =========================================================
+    // Ed25519
+    // =========================================================
+
+    /// Export the Ed25519 verifying/public key as Base64.
+    pub fn signing_public_key(&self) -> String {
+        STANDARD.encode(self.verifying_key.to_bytes())
     }
 
-    /// Borrow the private key internally.
-    pub fn secret(&self) -> &StaticSecret {
-        &self.secret
+    /// Borrow the Ed25519 signing key internally.
+    pub(crate) fn signing_key(&self) -> &SigningKey {
+        &self.signing_key
     }
 
-    /// Export the raw public key bytes.
-    pub fn public_bytes(&self) -> [u8; 32] {
-        self.public.to_bytes()
+    /// Borrow the Ed25519 verifying key internally.
+    pub fn verifying_key(&self) -> &VerifyingKey {
+        &self.verifying_key
     }
 
-    /// Export the raw private key bytes.
-    pub fn private_bytes(&self) -> [u8; 32] {
-        self.secret.to_bytes()
-    }
-}
-
-impl Drop for Identity {
-    fn drop(&mut self) {
-        let mut bytes = self.secret.to_bytes();
-        bytes.zeroize();
+    /// Export the raw Ed25519 public key bytes.
+    pub fn signing_public_bytes(&self) -> [u8; 32] {
+        self.verifying_key.to_bytes()
     }
 }

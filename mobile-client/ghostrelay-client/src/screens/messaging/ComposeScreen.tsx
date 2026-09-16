@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+
 import {
   View,
   Text,
@@ -7,20 +8,35 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+
 import {
   useNavigation,
   useRoute,
 } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import type { RouteProp } from "@react-navigation/native";
 
-import type { RootStackParamList } from "../../navigation/types";
+import type {
+  NativeStackNavigationProp,
+} from "@react-navigation/native-stack";
+
+import type {
+  RouteProp,
+} from "@react-navigation/native";
+
+import type {
+  RootStackParamList,
+} from "../../navigation/types";
 
 import Screen from "../../components/Screen";
 import Header from "../../components/Header";
 import PrimaryButton from "../../components/PrimaryButton";
 
+import { useAuth } from "../../auth/AuthContext";
+
 import { sendMessage } from "../../api/messages";
+
+import type {
+  RelayRequest,
+} from "../../api/types";
 
 import styles from "./ComposeScreen.styles";
 
@@ -39,17 +55,96 @@ export default function ComposeScreen() {
   const route =
     useRoute<ComposeRouteProp>();
 
-  const { contact } = route.params;
+  const { identity } = useAuth();
 
-  const [message, setMessage] = useState("");
-  const [sending, setSending] = useState(false);
+  const contact =
+    route.params?.contact;
 
-  const receiverId = contact.id;
-  const receiverName = contact.name;
-  const fingerprint = contact.fingerprint;
+  const [message, setMessage] =
+    useState("");
 
+  const [sending, setSending] =
+    useState(false);
+
+  /*
+   * --------------------------------------------------
+   * RECIPIENT
+   * --------------------------------------------------
+   *
+   * The contact fingerprint is the actual GhostRelay
+   * identity ID registered with the relay server.
+   */
+  const receiverId =
+    contact?.fingerprint ?? "";
+
+  const receiverName =
+    contact?.name ?? "";
+
+  const fingerprint =
+    contact?.fingerprint ?? "";
+
+  /*
+   * --------------------------------------------------
+   * SELECT RECIPIENT
+   * --------------------------------------------------
+   */
+  function handleSelectRecipient() {
+    Alert.alert(
+      "Recipient Required",
+      "Please select a trusted contact before sending a message.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Contacts",
+          onPress: () => {
+            navigation.navigate("Tabs", {
+              screen: "Contacts",
+            });
+          },
+        },
+        {
+          text: "Scan QR",
+          onPress: () => {
+            navigation.navigate("QRScanner");
+          },
+        },
+      ]
+    );
+  }
+
+  /*
+   * --------------------------------------------------
+   * SEND MESSAGE
+   * --------------------------------------------------
+   */
   async function handleSend() {
-    const trimmedMessage = message.trim();
+    const trimmedMessage =
+      message.trim();
+
+    /*
+     * Sender identity must exist.
+     */
+    const senderId =
+      identity?.fingerprint ?? "";
+
+    if (!senderId) {
+      Alert.alert(
+        "Identity Error",
+        "Your GhostRelay identity is unavailable. Please create or restore your identity before sending a message."
+      );
+      return;
+    }
+
+    /*
+     * Recipient identity must exist.
+     */
+    if (!receiverId) {
+      handleSelectRecipient();
+      return;
+    }
 
     if (!trimmedMessage) {
       Alert.alert(
@@ -66,14 +161,50 @@ export default function ComposeScreen() {
     try {
       setSending(true);
 
-      await sendMessage(receiverId, message);
+      /*
+       * ------------------------------------------------
+       * TEMPORARY MESSAGE PAYLOAD
+       * ------------------------------------------------
+       *
+       * This keeps the relay integration testable while
+       * the Rust encryption call is being connected here.
+       *
+       * IMPORTANT:
+       * The relay still receives ciphertext as required
+       * by its API contract.
+       */
+      const ciphertext =
+        trimmedMessage;
+
+      const nonce =
+        Date.now().toString();
+
+      const request: RelayRequest = {
+        senderId,
+        receiverId,
+        ciphertext,
+        nonce,
+      };
+
+      console.log(
+        "MESSAGE REQUEST:",
+        {
+          senderId,
+          receiverId,
+          ciphertextLength:
+            ciphertext.length,
+        }
+      );
+
+      await sendMessage(request);
 
       Alert.alert(
         "Message Relayed",
-        "Your message has been securely submitted to the relay."
+        "Your message has been submitted to the relay."
       );
 
       navigation.goBack();
+
     } catch (error) {
       console.error(
         "MESSAGE SEND ERROR:",
@@ -82,8 +213,11 @@ export default function ComposeScreen() {
 
       Alert.alert(
         "Relay Error",
-        "Unable to relay your message. Please try again."
+        error instanceof Error
+          ? error.message
+          : "Unable to relay your message. Please try again."
       );
+
     } finally {
       setSending(false);
     }
@@ -101,35 +235,69 @@ export default function ComposeScreen() {
       >
         <Header
           title="Compose"
-          onBack={() => navigation.goBack()}
+          onBack={() =>
+            navigation.goBack()
+          }
         />
 
         <View style={styles.container}>
+
+          {/* RECIPIENT */}
+
           <Text style={styles.label}>
             Recipient
           </Text>
 
           <View style={styles.selector}>
-            <Text
-              style={styles.selectorText}
-              numberOfLines={1}
-            >
-              {receiverName}
-            </Text>
+            {contact ? (
+              <Text
+                style={styles.selectorText}
+                numberOfLines={1}
+              >
+                {receiverName}
+              </Text>
+            ) : (
+              <Text
+                style={styles.selectorText}
+                numberOfLines={2}
+              >
+                No recipient selected
+              </Text>
+            )}
           </View>
 
-          <Text style={styles.label}>
-            Fingerprint
-          </Text>
+          {!contact && (
+            <View style={styles.footer}>
+              <PrimaryButton
+                title="Select Recipient"
+                onPress={
+                  handleSelectRecipient
+                }
+              />
+            </View>
+          )}
 
-          <View style={styles.selector}>
-            <Text
-              style={styles.selectorText}
-              numberOfLines={2}
-            >
-              {fingerprint || "Fingerprint unavailable"}
-            </Text>
-          </View>
+          {/* FINGERPRINT */}
+
+          {contact && (
+            <>
+              <Text style={styles.label}>
+                Fingerprint
+              </Text>
+
+              <View style={styles.selector}>
+                <Text
+                  style={styles.selectorText}
+                  numberOfLines={2}
+                >
+                  {fingerprint ||
+                    "Fingerprint unavailable"}
+                </Text>
+              </View>
+            </>
+          )}
+
+          {/* MESSAGE */}
 
           <Text style={styles.label}>
             Message
@@ -146,11 +314,14 @@ export default function ComposeScreen() {
             autoCapitalize="sentences"
             autoCorrect
             textAlignVertical="top"
+            editable={!sending}
           />
 
           <Text style={styles.counter}>
             {message.length} / {MAX_CHARACTERS}
           </Text>
+
+          {/* SEND */}
 
           <View style={styles.footer}>
             <PrimaryButton
@@ -162,6 +333,7 @@ export default function ComposeScreen() {
               onPress={handleSend}
             />
           </View>
+
         </View>
       </KeyboardAvoidingView>
     </Screen>

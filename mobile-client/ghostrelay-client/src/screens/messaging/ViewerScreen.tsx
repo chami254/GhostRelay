@@ -39,9 +39,9 @@ import {
 
 interface DecryptedMessage {
   id?: string;
-  sender: string;
-  body: string;
-  received?: string;
+  senderId: string;
+  ciphertext: string;
+  createdAt?: string;
 }
 
 type ViewerNavigationProp =
@@ -95,7 +95,7 @@ export default function ViewerScreen() {
           error
         );
       } finally {
-        navigation.replace("Expired");
+        navigation.navigate("Expired");
       }
     },
     [messageId, navigation]
@@ -106,16 +106,19 @@ export default function ViewerScreen() {
 
     async function loadMessage() {
       try {
-        const decrypted =
+        const retrieved =
           await getMessage(messageId);
 
         if (!mounted) {
           return;
         }
 
-        setMessage(
-          decrypted as DecryptedMessage
-        );
+        setMessage({
+          id: retrieved.id,
+          senderId: retrieved.senderId,
+          ciphertext: retrieved.ciphertext,
+          createdAt: retrieved.createdAt,
+        });
 
         setRemaining(
           SELF_DESTRUCT_SECONDS
@@ -131,7 +134,7 @@ export default function ViewerScreen() {
         }
 
         Alert.alert(
-          "Unable to decrypt message.",
+          "Unable to retrieve message.",
           "The message could not be retrieved from the relay.",
           [
             {
@@ -207,7 +210,7 @@ export default function ViewerScreen() {
               style={styles.sender}
               numberOfLines={1}
             >
-              {message.sender}
+              {message.senderId}
             </Text>
 
             <Text style={styles.verified}>
@@ -224,7 +227,7 @@ export default function ViewerScreen() {
 
           <View style={styles.messageCard}>
             <Text style={styles.message}>
-              {message.body}
+              {message.ciphertext}
             </Text>
           </View>
 

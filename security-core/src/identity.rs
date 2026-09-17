@@ -20,7 +20,6 @@ use x25519_dalek::{PublicKey, StaticSecret};
 pub struct Identity {
     x25519_secret: StaticSecret,
     x25519_public: PublicKey,
-
     signing_key: SigningKey,
     verifying_key: VerifyingKey,
 }
@@ -36,6 +35,30 @@ impl Identity {
         let x25519_public = PublicKey::from(&x25519_secret);
 
         let signing_key = SigningKey::generate(&mut OsRng);
+        let verifying_key = signing_key.verifying_key();
+
+        Self {
+            x25519_secret,
+            x25519_public,
+            signing_key,
+            verifying_key,
+        }
+    }
+
+    /// Restore a GhostRelay identity from its private key material.
+    ///
+    /// The public keys and fingerprint are regenerated from the
+    /// supplied private keys. They are therefore not independently
+    /// trusted during restoration.
+    ///
+    /// This function is intended for the native/platform secure
+    /// storage boundary and must never be exposed to React Native
+    /// JavaScript.
+    pub(crate) fn restore(x25519_private_key: &[u8; 32], signing_private_key: &[u8; 32]) -> Self {
+        let x25519_secret = StaticSecret::from(*x25519_private_key);
+        let x25519_public = PublicKey::from(&x25519_secret);
+
+        let signing_key = SigningKey::from_bytes(signing_private_key);
         let verifying_key = signing_key.verifying_key();
 
         Self {
@@ -78,13 +101,6 @@ impl Identity {
         self.x25519_public.to_bytes()
     }
 
-    /// Export the raw X25519 private key bytes.
-    ///
-    /// This remains restricted to the Rust crate.
-    pub(crate) fn private_bytes(&self) -> [u8; 32] {
-        self.x25519_secret.to_bytes()
-    }
-
     /// Generate the GhostRelay identity fingerprint.
     ///
     /// The fingerprint is the first 16 bytes of SHA-256 over
@@ -109,6 +125,14 @@ impl Identity {
         STANDARD.encode(self.verifying_key.to_bytes())
     }
 
+    /// Export the Ed25519 private signing key as Base64.
+    ///
+    /// This is intended only for the native/platform secure-storage
+    /// boundary. It must never be exposed to React Native JavaScript.
+    pub(crate) fn signing_private_key(&self) -> String {
+        STANDARD.encode(self.signing_key.to_bytes())
+    }
+
     /// Borrow the Ed25519 signing key internally.
     pub(crate) fn signing_key(&self) -> &SigningKey {
         &self.signing_key
@@ -117,10 +141,5 @@ impl Identity {
     /// Borrow the Ed25519 verifying key internally.
     pub fn verifying_key(&self) -> &VerifyingKey {
         &self.verifying_key
-    }
-
-    /// Export the raw Ed25519 public key bytes.
-    pub fn signing_public_bytes(&self) -> [u8; 32] {
-        self.verifying_key.to_bytes()
     }
 }

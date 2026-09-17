@@ -6,7 +6,7 @@ pub mod key_exchange;
 pub mod message;
 pub mod signatures;
 
-pub use crypto::{CryptoEngine, EncryptedPayload};
+pub use crypto::CryptoEngine;
 pub use errors::GhostRelayError;
 pub use identity::Identity;
 pub use key_exchange::KeyExchange;

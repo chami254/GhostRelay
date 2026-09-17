@@ -18,6 +18,7 @@ object RustBridge {
 
             mapOf(
                 "publicKey" to identity.getString("publicKey"),
+                "signingPublicKey" to identity.getString("signingPublicKey"),
                 "fingerprint" to identity.getString("fingerprint")
             )
 

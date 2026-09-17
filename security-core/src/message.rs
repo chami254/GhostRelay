@@ -3,8 +3,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 /// Protocol identifier for the current GhostRelay message format.
-pub const GHOSTRELAY_ALGORITHM: &str =
-    "X25519-SHA256-XChaCha20-Poly1305-Ed25519";
+pub const GHOSTRELAY_ALGORITHM: &str = "X25519-SHA256-XChaCha20-Poly1305-Ed25519";
 
 /// Encrypted GhostRelay relay message.
 ///
@@ -36,6 +35,8 @@ pub struct RelayMessage {
 
     /// Ed25519 signature over the protocol-defined signed message
     /// representation, Base64 encoded.
+    ///
+    /// This field is empty before the message is signed.
     pub signature: String,
 
     /// Cryptographic algorithm identifier.
@@ -52,8 +53,8 @@ impl RelayMessage {
     /// Construct a new relay message.
     ///
     /// The message ID and creation timestamp are generated locally.
-    /// The signature is supplied after the protocol-defined signed
-    /// representation has been produced.
+    /// The signature is initially empty and is supplied after the
+    /// protocol-defined signed representation has been produced.
     pub fn new(
         sender: String,
         recipient: String,
@@ -75,6 +76,35 @@ impl RelayMessage {
         }
     }
 
+    /// Validate the structural requirements of a GhostRelay message.
+    ///
+    /// This verifies protocol-level fields before cryptographic
+    /// signing or verification is performed.
+    ///
+    /// The signature is intentionally NOT validated here because
+    /// unsigned messages are valid input to the signing operation.
+    /// Cryptographic signature validation is performed separately
+    /// by SignatureEngine::verify().
+    pub fn validate(&self) -> Result<(), crate::GhostRelayError> {
+        if self.algorithm != GHOSTRELAY_ALGORITHM {
+            return Err(crate::GhostRelayError::UnsupportedAlgorithm);
+        }
+
+        if self.sender.is_empty() || self.recipient.is_empty() {
+            return Err(crate::GhostRelayError::InvalidMessage);
+        }
+
+        if self.ciphertext.is_empty() || self.nonce.is_empty() {
+            return Err(crate::GhostRelayError::InvalidMessage);
+        }
+
+        if self.expires_at <= self.created_at {
+            return Err(crate::GhostRelayError::InvalidMessage);
+        }
+
+        Ok(())
+    }
+
     /// Returns true if the message has reached or passed its
     /// expiration time.
     pub fn is_expired(&self) -> bool {
@@ -85,9 +115,7 @@ impl RelayMessage {
     ///
     /// Expired messages return zero rather than a negative value.
     pub fn seconds_remaining(&self) -> i64 {
-        (self.expires_at - Utc::now())
-            .num_seconds()
-            .max(0)
+        (self.expires_at - Utc::now()).num_seconds().max(0)
     }
 
     /// Indicates whether the message should be removed by relay

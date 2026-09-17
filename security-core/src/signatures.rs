@@ -2,16 +2,9 @@ use base64::{engine::general_purpose::STANDARD, Engine};
 
 use chrono::{DateTime, Utc};
 
-use ed25519_dalek::{
-    Signature,
-    Signer,
-    SigningKey,
-    Verifier,
-    VerifyingKey,
-};
+use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 
 use rand_core::OsRng;
-//use uuid::Uuid;
 
 use crate::errors::GhostRelayError;
 use crate::message::RelayMessage;
@@ -20,8 +13,7 @@ use crate::message::RelayMessage;
 ///
 /// This prevents a GhostRelay message signature from being
 /// accidentally interpreted as a signature over unrelated data.
-const MESSAGE_SIGNATURE_DOMAIN: &[u8] =
-    b"GHOSTRELAY-MESSAGE-V1";
+const MESSAGE_SIGNATURE_DOMAIN: &[u8] = b"GHOSTRELAY-MESSAGE-V1";
 
 /// Handles Ed25519 digital signing, verification, and
 /// deterministic message serialization.
@@ -53,9 +45,9 @@ impl SignatureEngine {
     /// ALGORITHM
     /// CREATED_AT
     /// EXPIRES_AT
-    pub fn serialize_message(
-        message: &RelayMessage,
-    ) -> Result<Vec<u8>, GhostRelayError> {
+    pub fn serialize_message(message: &RelayMessage) -> Result<Vec<u8>, GhostRelayError> {
+        message.validate()?;
+
         let mut output = Vec::new();
 
         // Domain separator.
@@ -65,54 +57,29 @@ impl SignatureEngine {
         output.extend_from_slice(message.id.as_bytes());
 
         // Length-prefixed variable-length fields.
-        Self::write_length_prefixed(
-            &mut output,
-            message.sender.as_bytes(),
-        )?;
+        Self::write_length_prefixed(&mut output, message.sender.as_bytes())?;
 
-        Self::write_length_prefixed(
-            &mut output,
-            message.recipient.as_bytes(),
-        )?;
+        Self::write_length_prefixed(&mut output, message.recipient.as_bytes())?;
 
-        Self::write_length_prefixed(
-            &mut output,
-            message.ciphertext.as_bytes(),
-        )?;
+        Self::write_length_prefixed(&mut output, message.ciphertext.as_bytes())?;
 
-        Self::write_length_prefixed(
-            &mut output,
-            message.nonce.as_bytes(),
-        )?;
+        Self::write_length_prefixed(&mut output, message.nonce.as_bytes())?;
 
-        Self::write_length_prefixed(
-            &mut output,
-            message.algorithm.as_bytes(),
-        )?;
+        Self::write_length_prefixed(&mut output, message.algorithm.as_bytes())?;
 
         // Creation timestamp.
-        Self::write_timestamp(
-            &mut output,
-            message.created_at,
-        )?;
+        Self::write_timestamp(&mut output, message.created_at);
 
         // Expiration timestamp.
-        Self::write_timestamp(
-            &mut output,
-            message.expires_at,
-        )?;
+        Self::write_timestamp(&mut output, message.expires_at);
 
         Ok(output)
     }
 
     /// Write a variable-length byte sequence using a fixed
     /// 4-byte big-endian length prefix.
-    fn write_length_prefixed(
-        output: &mut Vec<u8>,
-        data: &[u8],
-    ) -> Result<(), GhostRelayError> {
-        let length = u32::try_from(data.len())
-            .map_err(|_| GhostRelayError::SerializationFailed)?;
+    fn write_length_prefixed(output: &mut Vec<u8>, data: &[u8]) -> Result<(), GhostRelayError> {
+        let length = u32::try_from(data.len()).map_err(|_| GhostRelayError::SerializationFailed)?;
 
         output.extend_from_slice(&length.to_be_bytes());
         output.extend_from_slice(data);
@@ -123,30 +90,20 @@ impl SignatureEngine {
     /// Serialize a timestamp deterministically as:
     ///
     /// [8-byte seconds][4-byte nanoseconds]
-    fn write_timestamp(
-        output: &mut Vec<u8>,
-        timestamp: DateTime<Utc>,
-    ) -> Result<(), GhostRelayError> {
+    fn write_timestamp(output: &mut Vec<u8>, timestamp: DateTime<Utc>) {
         let seconds = timestamp.timestamp();
-
-        let nanoseconds = timestamp
-            .timestamp_subsec_nanos();
+        let nanoseconds = timestamp.timestamp_subsec_nanos();
 
         output.extend_from_slice(&seconds.to_be_bytes());
         output.extend_from_slice(&nanoseconds.to_be_bytes());
-
-        Ok(())
     }
 
     /// Sign arbitrary bytes using Ed25519.
     ///
     /// Higher-level protocol code should normally call
-    /// `serialize_message()` first and then pass the resulting
+    /// serialize_message() first and then pass the resulting
     /// bytes here.
-    pub fn sign(
-        signing_key: &SigningKey,
-        message: &[u8],
-    ) -> Result<String, GhostRelayError> {
+    pub fn sign(signing_key: &SigningKey, message: &[u8]) -> Result<String, GhostRelayError> {
         let signature = signing_key.sign(message);
 
         Ok(STANDARD.encode(signature.to_bytes()))
@@ -154,6 +111,9 @@ impl SignatureEngine {
 
     /// Sign a complete GhostRelay relay message using the
     /// canonical protocol representation.
+    ///
+    /// The message may have an empty signature because the
+    /// signature is generated by this operation.
     pub fn sign_message(
         signing_key: &SigningKey,
         message: &RelayMessage,
@@ -188,30 +148,25 @@ impl SignatureEngine {
 
     /// Verify a signature against a complete GhostRelay
     /// relay message using the canonical representation.
+    ///
+    /// Structural validation is performed before the signature
+    /// itself is cryptographically verified.
     pub fn verify_message(
         verifying_key: &VerifyingKey,
         message: &RelayMessage,
     ) -> Result<(), GhostRelayError> {
         let serialized = Self::serialize_message(message)?;
 
-        Self::verify(
-            verifying_key,
-            &serialized,
-            &message.signature,
-        )
+        Self::verify(verifying_key, &serialized, &message.signature)
     }
 
     /// Export an Ed25519 public signing key as Base64.
-    pub fn export_public_key(
-        verifying_key: &VerifyingKey,
-    ) -> String {
+    pub fn export_public_key(verifying_key: &VerifyingKey) -> String {
         STANDARD.encode(verifying_key.to_bytes())
     }
 
     /// Import an Ed25519 public signing key from Base64.
-    pub fn import_public_key(
-        key: &str,
-    ) -> Result<VerifyingKey, GhostRelayError> {
+    pub fn import_public_key(key: &str) -> Result<VerifyingKey, GhostRelayError> {
         let bytes = STANDARD
             .decode(key)
             .map_err(|_| GhostRelayError::InvalidPublicKey)?;
@@ -220,7 +175,6 @@ impl SignatureEngine {
             .try_into()
             .map_err(|_| GhostRelayError::InvalidPublicKey)?;
 
-        VerifyingKey::from_bytes(&bytes)
-            .map_err(|_| GhostRelayError::InvalidPublicKey)
+        VerifyingKey::from_bytes(&bytes).map_err(|_| GhostRelayError::InvalidPublicKey)
     }
 }

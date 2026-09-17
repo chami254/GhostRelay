@@ -29,9 +29,13 @@ impl KeyExchange {
         identity: &Identity,
         recipient_public: &PublicKey,
     ) -> Result<[u8; 32], GhostRelayError> {
-        let shared_secret = identity
-            .secret()
-            .diffie_hellman(recipient_public);
+        let shared_secret = identity.secret().diffie_hellman(recipient_public);
+
+        // Reject an all-zero shared secret. This can occur when an
+        // invalid/low-order X25519 public key is supplied.
+        if shared_secret.as_bytes().iter().all(|byte| *byte == 0) {
+            return Err(GhostRelayError::SharedSecretFailed);
+        }
 
         Ok(*shared_secret.as_bytes())
     }
@@ -40,9 +44,7 @@ impl KeyExchange {
     ///
     /// This provides the boundary between serialized public-key data
     /// received from another identity and the X25519 implementation.
-    pub fn public_key_from_base64(
-        encoded: &str,
-    ) -> Result<PublicKey, GhostRelayError> {
+    pub fn public_key_from_base64(encoded: &str) -> Result<PublicKey, GhostRelayError> {
         use base64::{engine::general_purpose::STANDARD, Engine};
 
         let bytes = STANDARD

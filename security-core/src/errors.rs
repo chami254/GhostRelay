@@ -5,7 +5,6 @@ pub enum GhostRelayError {
     // ===========================
     // Identity
     // ===========================
-
     #[error("Failed to generate cryptographic identity.")]
     IdentityGeneration,
 
@@ -21,7 +20,6 @@ pub enum GhostRelayError {
     // ===========================
     // Encryption
     // ===========================
-
     #[error("Failed to encrypt message.")]
     EncryptionFailed,
 
@@ -40,7 +38,6 @@ pub enum GhostRelayError {
     // ===========================
     // Signatures
     // ===========================
-
     #[error("Failed to sign message.")]
     SignatureFailed,
 
@@ -53,7 +50,6 @@ pub enum GhostRelayError {
     // ===========================
     // Encoding
     // ===========================
-
     #[error("Base64 decoding failed.")]
     Base64DecodeFailed,
 
@@ -66,7 +62,6 @@ pub enum GhostRelayError {
     // ===========================
     // Relay Messages
     // ===========================
-
     #[error("Invalid relay message.")]
     InvalidMessage,
 
@@ -85,7 +80,6 @@ pub enum GhostRelayError {
     // ===========================
     // Serialization
     // ===========================
-
     #[error("Serialization failed.")]
     SerializationFailed,
 
@@ -95,7 +89,6 @@ pub enum GhostRelayError {
     // ===========================
     // System
     // ===========================
-
     #[error("Internal security error.")]
     InternalError,
 

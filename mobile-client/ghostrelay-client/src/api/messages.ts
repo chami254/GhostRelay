@@ -6,7 +6,7 @@ import type {
 } from "./types";
 
 export interface SecureMessage extends Message {
-  expiresAt?: string;
+  expiresAt: string;
 }
 
 export interface InboxMessage extends Message {
@@ -17,8 +17,12 @@ export interface SendMessageResponse {
   id: string;
 }
 
-export async function getInbox(): Promise<InboxMessage[]> {
-  return apiFetch<InboxMessage[]>("/messages");
+export async function getInbox(
+  receiverId: string
+): Promise<InboxMessage[]> {
+  return apiFetch<InboxMessage[]>(
+    `/messages?receiverId=${encodeURIComponent(receiverId)}`
+  );
 }
 
 export async function getMessage(

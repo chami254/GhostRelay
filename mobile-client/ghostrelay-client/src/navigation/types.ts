@@ -40,6 +40,8 @@ export type RootStackParamList = {
   AddContact:
     | {
         publicKey?: string;
+        signingPublicKey?: string;
+        fingerprint?: string;
       }
     | undefined;
 

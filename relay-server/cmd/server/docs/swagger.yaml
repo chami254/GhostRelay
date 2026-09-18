@@ -1,4 +1,381 @@
+basePath: /
+definitions:
+  models.Contact:
+    properties:
+      createdAt:
+        type: string
+      fingerprint:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      publicKey:
+        type: string
+      signingPublicKey:
+        type: string
+    type: object
+  models.ContactRequest:
+    properties:
+      publicKey:
+        type: string
+    type: object
+  models.Identity:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      publicKey:
+        type: string
+      signingPublicKey:
+        type: string
+    type: object
+  models.Message:
+    properties:
+      algorithm:
+        type: string
+      ciphertext:
+        type: string
+      createdAt:
+        type: string
+      delivered:
+        type: boolean
+      expiresAt:
+        type: string
+      id:
+        type: string
+      nonce:
+        type: string
+      publicKey:
+        type: string
+      receiverId:
+        type: string
+      senderId:
+        type: string
+      signature:
+        type: string
+      signingPublicKey:
+        type: string
+    type: object
+  models.RelayRequest:
+    properties:
+      algorithm:
+        type: string
+      ciphertext:
+        type: string
+      createdAt:
+        type: string
+      expiresAt:
+        type: string
+      id:
+        type: string
+      nonce:
+        type: string
+      receiverId:
+        type: string
+      senderId:
+        type: string
+      signature:
+        type: string
+    type: object
+host: localhost:8080
 info:
   contact: {}
-paths: {}
+  description: GhostRelay Secure Messaging Relay Server
+  title: GhostRelay API
+  version: "1.0"
+paths:
+  /contacts:
+    get:
+      description: Returns all saved contacts.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Contact'
+            type: array
+      summary: Get saved contacts
+      tags:
+      - Contacts
+    post:
+      consumes:
+      - application/json
+      description: Saves a contact using a registered GhostRelay public key.
+      parameters:
+      - description: Contact identity
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ContactRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Contact'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Save a contact
+      tags:
+      - Contacts
+  /health:
+    get:
+      description: Checks whether the GhostRelay relay server is running.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Health Check
+      tags:
+      - Health
+  /identity:
+    post:
+      consumes:
+      - application/json
+      description: Registers a user's public identity with the GhostRelay relay.
+      parameters:
+      - description: Identity
+        in: body
+        name: identity
+        required: true
+        schema:
+          $ref: '#/definitions/models.Identity'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Identity'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register a new identity
+      tags:
+      - Identity
+  /identity/register:
+    post:
+      consumes:
+      - application/json
+      description: Registers a user's public identity with the GhostRelay relay.
+      parameters:
+      - description: Identity
+        in: body
+        name: identity
+        required: true
+        schema:
+          $ref: '#/definitions/models.Identity'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Identity'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register a new identity
+      tags:
+      - Identity
+  /messages:
+    get:
+      description: Returns pending encrypted messages for the receiverId query parameter.
+      parameters:
+      - description: Recipient ID
+        in: query
+        name: receiverId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Message'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Retrieve pending messages for a recipient
+      tags:
+      - Messages
+    post:
+      consumes:
+      - application/json
+      description: Accepts a signed encrypted message and stores it in the relay.
+      parameters:
+      - description: Signed encrypted message
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.RelayRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Send a message
+      tags:
+      - Messages
+  /messages/{id}:
+    delete:
+      description: Marks a message as delivered and removes it from active delivery.
+      parameters:
+      - description: Message ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a delivered message
+      tags:
+      - Messages
+    get:
+      description: Returns a single pending message by ID.
+      parameters:
+      - description: Message ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Retrieve a single message
+      tags:
+      - Messages
+  /messages/receiver/{receiverId}:
+    get:
+      description: Returns pending encrypted messages for a specific recipient.
+      parameters:
+      - description: Recipient ID
+        in: path
+        name: receiverId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Message'
+            type: array
+      summary: Retrieve pending messages
+      tags:
+      - Messages
+  /relay:
+    post:
+      consumes:
+      - application/json
+      description: Accepts a signed encrypted message and stores it in the relay for
+        the intended recipient.
+      parameters:
+      - description: Signed encrypted message
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.RelayRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Relay a signed encrypted message
+      tags:
+      - Relay
 swagger: "2.0"

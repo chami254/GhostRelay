@@ -19,22 +19,27 @@ import {
   useNavigation,
 } from "@react-navigation/native";
 
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type {
+  NativeStackNavigationProp,
+} from "@react-navigation/native-stack";
 
 import type {
   RootStackParamList,
 } from "../../navigation/types";
 
 import Screen from "../../components/Screen";
-
 import { Colors } from "../../theme";
-
 import styles from "./InboxScreen.styles";
 
 import {
   getInbox,
+} from "../../api/messages";
+
+import type {
   InboxMessage,
 } from "../../api/messages";
+
+import { useAuth } from "../../auth/AuthContext";
 
 type InboxNavigationProp =
   NativeStackNavigationProp<RootStackParamList>;
@@ -42,6 +47,8 @@ type InboxNavigationProp =
 export default function InboxScreen() {
   const navigation =
     useNavigation<InboxNavigationProp>();
+
+  const { identity } = useAuth();
 
   const [messages, setMessages] =
     useState<InboxMessage[]>([]);
@@ -54,7 +61,13 @@ export default function InboxScreen() {
       try {
         setLoading(true);
 
-        const inbox = await getInbox();
+        if (!identity?.fingerprint) {
+          setMessages([]);
+          return;
+        }
+
+        const inbox =
+          await getInbox(identity.fingerprint);
 
         setMessages(inbox);
       } catch (error) {
@@ -65,20 +78,17 @@ export default function InboxScreen() {
 
         Alert.alert(
           "Relay Error",
-          "Unable to retrieve messages from the relay."
+          "Unable to retrieve encrypted messages from the relay."
         );
       } finally {
         setLoading(false);
       }
     },
-    []
+    [identity?.fingerprint]
   );
 
   /*
    * Reload whenever the Inbox tab becomes active.
-   *
-   * This keeps the inbox current after returning
-   * from another screen.
    */
   useFocusEffect(
     useCallback(() => {
@@ -101,7 +111,7 @@ export default function InboxScreen() {
           })
         }
         accessibilityRole="button"
-        accessibilityLabel={`Message from ${item.senderId}`}
+        accessibilityLabel={`Encrypted message from ${item.senderId}`}
       >
         <View style={styles.leftSection}>
           <View style={styles.iconContainer}>
@@ -121,7 +131,7 @@ export default function InboxScreen() {
             </Text>
 
             <Text style={styles.subtitle}>
-              Encrypted Payload
+              Encrypted & Signed Message
             </Text>
 
             <Text style={styles.time}>
@@ -129,7 +139,7 @@ export default function InboxScreen() {
             </Text>
 
             <Text style={styles.expiration}>
-              Expires in {item.expiresAt}
+              Expires {item.expiresAt}
             </Text>
           </View>
         </View>
@@ -188,7 +198,9 @@ export default function InboxScreen() {
 
         <FlatList
           data={messages}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) =>
+            item.id
+          }
           renderItem={renderMessage}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={
@@ -209,9 +221,9 @@ export default function InboxScreen() {
           ListFooterComponent={
             messages.length > 0 ? (
               <Text style={styles.footer}>
-                Messages are permanently deleted
-                from the relay after successful
-                retrieval.
+                Messages are automatically
+                removed according to the relay
+                delivery and expiration policy.
               </Text>
             ) : null
           }

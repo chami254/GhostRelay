@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-
 import {
   View,
   Text,
@@ -8,39 +7,37 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-
 import {
   useNavigation,
   useRoute,
 } from "@react-navigation/native";
-
 import type {
   NativeStackNavigationProp,
 } from "@react-navigation/native-stack";
-
 import type {
   RouteProp,
 } from "@react-navigation/native";
-
 import type {
   RootStackParamList,
 } from "../../navigation/types";
-
 import Screen from "../../components/Screen";
 import Header from "../../components/Header";
 import PrimaryButton from "../../components/PrimaryButton";
-
 import { useAuth } from "../../auth/AuthContext";
-
 import { sendMessage } from "../../api/messages";
-
+import {
+  encrypt,
+  signMessage,
+} from "../../native/GhostRelay";
 import type {
   RelayRequest,
 } from "../../api/types";
-
 import styles from "./ComposeScreen.styles";
 
 const MAX_CHARACTERS = 512;
+const MESSAGE_ALGORITHM =
+  "X25519-SHA256-XChaCha20-Poly1305-Ed25519";
+const MESSAGE_LIFETIME_MS = 24 * 60 * 60 * 1000;
 
 type ComposeNavigationProp =
   NativeStackNavigationProp<RootStackParamList>;
@@ -71,8 +68,8 @@ export default function ComposeScreen() {
    * RECIPIENT
    * --------------------------------------------------
    *
-   * The contact fingerprint is the actual GhostRelay
-   * identity ID registered with the relay server.
+   * The contact fingerprint is the GhostRelay identity
+   * registered with the relay server.
    */
   const receiverId =
     contact?.fingerprint ?? "";
@@ -119,6 +116,12 @@ export default function ComposeScreen() {
    * --------------------------------------------------
    * SEND MESSAGE
    * --------------------------------------------------
+   *
+   * Plaintext is encrypted by the Rust security core.
+   * The resulting encrypted payload is then signed by
+   * the active GhostRelay identity.
+   *
+   * Plaintext never enters the relay request.
    */
   async function handleSend() {
     const trimmedMessage =
@@ -139,10 +142,21 @@ export default function ComposeScreen() {
     }
 
     /*
-     * Recipient identity must exist.
+     * Recipient must exist.
      */
-    if (!receiverId) {
+    if (!contact || !receiverId) {
       handleSelectRecipient();
+      return;
+    }
+
+    /*
+     * Recipient encryption key must exist.
+     */
+    if (!contact.publicKey) {
+      Alert.alert(
+        "Recipient Error",
+        "The selected contact does not have a valid encryption public key."
+      );
       return;
     }
 
@@ -162,37 +176,89 @@ export default function ComposeScreen() {
       setSending(true);
 
       /*
-       * ------------------------------------------------
-       * TEMPORARY MESSAGE PAYLOAD
-       * ------------------------------------------------
+       * Generate message metadata.
        *
-       * This keeps the relay integration testable while
-       * the Rust encryption call is being connected here.
-       *
-       * IMPORTANT:
-       * The relay still receives ciphertext as required
-       * by its API contract.
+       * The ID is included in the signed message so that
+       * the signature is bound to one specific message.
        */
-      const ciphertext =
-        trimmedMessage;
+      const messageId =
+        crypto.randomUUID();
 
-      const nonce =
-        Date.now().toString();
+      const createdAt =
+        new Date().toISOString();
 
-      const request: RelayRequest = {
+      const expiresAt =
+        new Date(
+          Date.now() + MESSAGE_LIFETIME_MS
+        ).toISOString();
+
+      /*
+       * ------------------------------------------------
+       * ENCRYPT
+       * ------------------------------------------------
+       *
+       * Rust performs:
+       * X25519 shared-secret derivation
+       * -> SHA-256 key derivation
+       * -> XChaCha20-Poly1305 encryption
+       */
+      const encrypted =
+        await encrypt(
+          contact.publicKey,
+          trimmedMessage
+        );
+
+      /*
+       * Construct the unsigned canonical message.
+       *
+       * This exact object is what Rust signs.
+       */
+      const unsignedMessage = {
+        id: messageId,
         senderId,
         receiverId,
-        ciphertext,
-        nonce,
+        ciphertext: encrypted.ciphertext,
+        nonce: encrypted.nonce,
+        algorithm: MESSAGE_ALGORITHM,
+        createdAt,
+        expiresAt,
+      };
+
+      /*
+       * ------------------------------------------------
+       * SIGN
+       * ------------------------------------------------
+       *
+       * Rust signs the canonical serialization of the
+       * message using the active Ed25519 identity.
+       */
+      const signature =
+        await signMessage(
+          JSON.stringify(unsignedMessage)
+        );
+
+      /*
+       * Add the signature after signing.
+       */
+      const request: RelayRequest = {
+        ...unsignedMessage,
+        signature,
       };
 
       console.log(
         "MESSAGE REQUEST:",
         {
-          senderId,
-          receiverId,
+          id: request.id,
+          senderId: request.senderId,
+          receiverId: request.receiverId,
           ciphertextLength:
-            ciphertext.length,
+            request.ciphertext.length,
+          nonceLength:
+            request.nonce.length,
+          signatureLength:
+            request.signature.length,
+          algorithm:
+            request.algorithm,
         }
       );
 
@@ -200,11 +266,11 @@ export default function ComposeScreen() {
 
       Alert.alert(
         "Message Relayed",
-        "Your message has been submitted to the relay."
+        "Your encrypted and signed message has been submitted to the relay."
       );
 
+      setMessage("");
       navigation.goBack();
-
     } catch (error) {
       console.error(
         "MESSAGE SEND ERROR:",
@@ -212,12 +278,11 @@ export default function ComposeScreen() {
       );
 
       Alert.alert(
-        "Relay Error",
+        "Message Error",
         error instanceof Error
           ? error.message
-          : "Unable to relay your message. Please try again."
+          : "Unable to encrypt and relay your message. Please try again."
       );
-
     } finally {
       setSending(false);
     }
@@ -241,9 +306,7 @@ export default function ComposeScreen() {
         />
 
         <View style={styles.container}>
-
           {/* RECIPIENT */}
-
           <Text style={styles.label}>
             Recipient
           </Text>
@@ -278,7 +341,6 @@ export default function ComposeScreen() {
           )}
 
           {/* FINGERPRINT */}
-
           {contact && (
             <>
               <Text style={styles.label}>
@@ -298,7 +360,6 @@ export default function ComposeScreen() {
           )}
 
           {/* MESSAGE */}
-
           <Text style={styles.label}>
             Message
           </Text>
@@ -322,18 +383,16 @@ export default function ComposeScreen() {
           </Text>
 
           {/* SEND */}
-
           <View style={styles.footer}>
             <PrimaryButton
               title={
                 sending
-                  ? "Sending..."
+                  ? "Encrypting..."
                   : "Encrypt & Relay"
               }
               onPress={handleSend}
             />
           </View>
-
         </View>
       </KeyboardAvoidingView>
     </Screen>

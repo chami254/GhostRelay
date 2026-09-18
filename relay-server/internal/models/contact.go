@@ -7,10 +7,10 @@ type ContactRequest struct {
 }
 
 type Contact struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	PublicKey   string    `json:"publicKey"`
-	Fingerprint string    `json:"fingerprint"`
-	Alias       string    `json:"alias"`
-	CreatedAt   time.Time `json:"createdAt"`
+	ID               string    `json:"id"`
+	Name             string    `json:"name"`
+	PublicKey        string    `json:"publicKey"`
+	SigningPublicKey string    `json:"signingPublicKey"`
+	Fingerprint      string    `json:"fingerprint"`
+	CreatedAt        time.Time `json:"createdAt"`
 }

@@ -6,64 +6,59 @@ import {
   Alert,
 } from "react-native";
 
-import { generateIdentity } from "../../../modules/ghostrelay-security/src";
-
 import Screen from "../../components/Screen";
 import Header from "../../components/Header";
 import Card from "../../components/Card";
 import PrimaryButton from "../../components/PrimaryButton";
 import GhostLogo from "../../components/GhostLogo";
-
 import { Colors } from "../../theme";
-import { registerIdentity } from "../../api/identity";
+
+import {
+  generateIdentity,
+  registerIdentity,
+  validateIdentity,
+} from "../../api/identity";
+
 import { useAuth } from "../../auth/AuthContext";
 
 export default function IdentityScreen() {
   const { createSession } = useAuth();
 
   const [publicKey, setPublicKey] = useState("");
-  const [fingerprint, setFingerprint] = useState("");
+  const [signingPublicKey, setSigningPublicKey] =
+    useState("");
+  const [fingerprint, setFingerprint] =
+    useState("");
+
   const [loading, setLoading] = useState(false);
 
   async function handleGenerateIdentity() {
-    console.log("=== GENERATE IDENTITY PRESSED ===");
-
-    try {
-      console.log("=== ABOUT TO CALL generateIdentity() ===");
-  
-      const result = await generateIdentity();
-  
-      console.log("=== generateIdentity RETURNED ===", result);
-  
-      // existing code...
-    } catch (error) {
-      console.error("=== IDENTITY CREATION ERROR ===", error);
-    }
-
     if (loading) {
-      console.log("=== GENERATE IDENTITY: ALREADY LOADING ===");
+      console.log(
+        "=== GENERATE IDENTITY: ALREADY LOADING ==="
+      );
       return;
     }
 
     setLoading(true);
 
     try {
-      /*
-       * Generate the identity through the GhostRelay native
-       * security module.
-       *
-       * The actual identity generation occurs inside the
-       * Rust security core through the Kotlin bridge.
-       *
-       * React Native receives only:
-       * - publicKey
-       * - fingerprint
-       *
-       * The private key remains inside the native security layer.
-       */
-
       console.log(
-        "=== CALLING GhostRelay SECURITY MODULE ==="
+        "=== GENERATE IDENTITY PRESSED ==="
+      );
+
+      /*
+       * ========================================================
+       * Generate cryptographic identity
+       * ========================================================
+       *
+       * The actual key generation occurs inside the
+       * GhostRelay Rust security core.
+       *
+       * React Native receives public identity information only.
+       */
+      console.log(
+        "=== CALLING GHOSTRELAY SECURITY MODULE ==="
       );
 
       const result = await generateIdentity();
@@ -74,34 +69,38 @@ export default function IdentityScreen() {
       );
 
       /*
-       * Validate the identity returned by the native layer.
+       * ========================================================
+       * Validate identity
+       * ========================================================
        */
 
-      if (
-        !result ||
-        typeof result.publicKey !== "string" ||
-        typeof result.fingerprint !== "string" ||
-        result.publicKey.length === 0 ||
-        result.fingerprint.length === 0
-      ) {
+      if (!validateIdentity(result)) {
         throw new Error(
           "Invalid identity returned from the Rust security core."
         );
       }
 
       /*
-       * Display the public identity information.
+       * ========================================================
+       * Update UI
+       * ========================================================
        */
 
       setPublicKey(result.publicKey);
+      setSigningPublicKey(
+        result.signingPublicKey
+      );
       setFingerprint(result.fingerprint);
 
       /*
-       * Register ONLY the public identity with the relay.
+       * ========================================================
+       * Register public identity with relay
+       * ========================================================
        *
-       * The private key never leaves the native security layer.
+       * Only public identity information is sent.
+       *
+       * Private keys never enter this request.
        */
-
       console.log(
         "=== REGISTERING PUBLIC IDENTITY ==="
       );
@@ -109,6 +108,8 @@ export default function IdentityScreen() {
       await registerIdentity({
         id: result.fingerprint,
         publicKey: result.publicKey,
+        signingPublicKey:
+          result.signingPublicKey,
       });
 
       console.log(
@@ -116,13 +117,15 @@ export default function IdentityScreen() {
       );
 
       /*
-       * Create the application session.
+       * ========================================================
+       * Create application session
+       * ========================================================
        *
-       * AuthContext will change the authentication state.
-       * ApplicationGate then controls the transition into
-       * the authenticated application.
+       * The application session only needs the public
+       * identity information required by session.ts.
+       *
+       * Private cryptographic material remains inside Rust.
        */
-
       console.log(
         "AUTH: createSession() START"
       );
@@ -130,18 +133,12 @@ export default function IdentityScreen() {
       await createSession({
         publicKey: result.publicKey,
         fingerprint: result.fingerprint,
+        signingPublicKey: result.signingPublicKey,
       });
 
       console.log(
         "IDENTITY: createSession() completed"
       );
-
-      /*
-       * Do not manually navigate here.
-       *
-       * ApplicationGate owns the authentication transition.
-       */
-
     } catch (error) {
       console.error(
         "=== IDENTITY CREATION ERROR ===",
@@ -200,7 +197,7 @@ export default function IdentityScreen() {
         >
           Your identity is generated locally.
           {"\n"}
-          Your private key never leaves your device.
+          Your private keys never leave your device.
         </Text>
 
         <Card>
@@ -211,7 +208,7 @@ export default function IdentityScreen() {
               fontWeight: "600",
             }}
           >
-            Public Key
+            X25519 Public Key
           </Text>
 
           <Text
@@ -221,6 +218,27 @@ export default function IdentityScreen() {
             selectable
           >
             {publicKey || "Tap Generate Identity"}
+          </Text>
+        </Card>
+
+        <Card>
+          <Text
+            style={{
+              color: Colors.primary,
+              marginBottom: 8,
+              fontWeight: "600",
+            }}
+          >
+            Ed25519 Signing Public Key
+          </Text>
+
+          <Text
+            style={{
+              color: Colors.text,
+            }}
+            selectable
+          >
+            {signingPublicKey || "--"}
           </Text>
         </Card>
 

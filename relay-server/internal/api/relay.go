@@ -11,14 +11,15 @@ import (
 
 // RelayMessage godoc
 //
-// @Summary Relay an encrypted message
-// @Description Accepts an encrypted payload and stores it in the relay for the intended recipient.
+// @Summary Relay a signed encrypted message
+// @Description Accepts a signed encrypted message and stores it in the relay for the intended recipient.
 // @Tags Relay
 // @Accept json
 // @Produce json
-// @Param request body models.RelayRequest true "Encrypted Message"
+// @Param request body models.RelayRequest true "Signed encrypted message"
 // @Success 201 {object} models.Message
 // @Failure 400 {object} map[string]string
+// @Failure 409 {object} map[string]string
 // @Router /relay [post]
 func RelayMessage(service *relay.RelayService) gin.HandlerFunc {
 
@@ -39,6 +40,13 @@ func RelayMessage(service *relay.RelayService) gin.HandlerFunc {
 
 		if err != nil {
 
+			if err.Error() == "message already exists" {
+				c.JSON(http.StatusConflict, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": err.Error(),
 			})
@@ -47,7 +55,5 @@ func RelayMessage(service *relay.RelayService) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusCreated, message)
-
 	}
-
 }

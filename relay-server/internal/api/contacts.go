@@ -12,16 +12,18 @@ import (
 // SaveContact godoc
 //
 // @Summary Save a contact
-// @Description Saves a trusted contact using their registered public key.
+// @Description Saves a contact using a registered GhostRelay public key.
 // @Tags Contacts
 // @Accept json
 // @Produce json
-// @Param request body models.ContactRequest true "Contact"
+// @Param request body models.ContactRequest true "Contact identity"
 // @Success 201 {object} models.Contact
 // @Failure 400 {object} map[string]string
 // @Router /contacts [post]
 func SaveContact(service *relay.RelayService) gin.HandlerFunc {
+
 	return func(c *gin.Context) {
+
 		var request models.ContactRequest
 
 		if err := c.ShouldBindJSON(&request); err != nil {
@@ -53,14 +55,16 @@ func SaveContact(service *relay.RelayService) gin.HandlerFunc {
 
 // GetContacts godoc
 //
-// @Summary Get all contacts
+// @Summary Get saved contacts
 // @Description Returns all saved contacts.
 // @Tags Contacts
 // @Produce json
 // @Success 200 {array} models.Contact
 // @Router /contacts [get]
 func GetContacts(service *relay.RelayService) gin.HandlerFunc {
+
 	return func(c *gin.Context) {
+
 		contacts := service.GetContacts()
 
 		c.JSON(http.StatusOK, contacts)

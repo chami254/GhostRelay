@@ -20,6 +20,8 @@ import (
 // @Param identity body models.Identity true "Identity"
 // @Success 201 {object} models.Identity
 // @Failure 400 {object} map[string]string
+// @Failure 409 {object} map[string]string
+// @Router /identity [post]
 // @Router /identity/register [post]
 func RegisterIdentity(service *relay.RelayService) gin.HandlerFunc {
 
@@ -34,9 +36,14 @@ func RegisterIdentity(service *relay.RelayService) gin.HandlerFunc {
 			return
 		}
 
-		identity.CreatedAt = time.Now()
+		identity.CreatedAt = time.Now().UTC()
 
-		service.RegisterIdentity(identity)
+		if err := service.RegisterIdentity(identity); err != nil {
+			c.JSON(http.StatusConflict, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
 
 		c.JSON(http.StatusCreated, identity)
 	}

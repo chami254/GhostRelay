@@ -1,7 +1,579 @@
 {
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "GhostRelay Secure Messaging Relay Server",
+        "title": "GhostRelay API",
+        "contact": {},
+        "version": "1.0"
     },
-    "paths": {}
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/contacts": {
+            "get": {
+                "description": "Returns all saved contacts.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Contacts"
+                ],
+                "summary": "Get saved contacts",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Contact"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Saves a contact using a registered GhostRelay public key.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Contacts"
+                ],
+                "summary": "Save a contact",
+                "parameters": [
+                    {
+                        "description": "Contact identity",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ContactRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Contact"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "description": "Checks whether the GhostRelay relay server is running.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Health Check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/identity": {
+            "post": {
+                "description": "Registers a user's public identity with the GhostRelay relay.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Identity"
+                ],
+                "summary": "Register a new identity",
+                "parameters": [
+                    {
+                        "description": "Identity",
+                        "name": "identity",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Identity"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Identity"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/identity/register": {
+            "post": {
+                "description": "Registers a user's public identity with the GhostRelay relay.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Identity"
+                ],
+                "summary": "Register a new identity",
+                "parameters": [
+                    {
+                        "description": "Identity",
+                        "name": "identity",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Identity"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Identity"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/messages": {
+            "get": {
+                "description": "Returns pending encrypted messages for the receiverId query parameter.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "Retrieve pending messages for a recipient",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Recipient ID",
+                        "name": "receiverId",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Message"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Accepts a signed encrypted message and stores it in the relay.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "Send a message",
+                "parameters": [
+                    {
+                        "description": "Signed encrypted message",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.RelayRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/messages/receiver/{receiverId}": {
+            "get": {
+                "description": "Returns pending encrypted messages for a specific recipient.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "Retrieve pending messages",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Recipient ID",
+                        "name": "receiverId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Message"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/messages/{id}": {
+            "get": {
+                "description": "Returns a single pending message by ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "Retrieve a single message",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Message ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Marks a message as delivered and removes it from active delivery.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "Delete a delivered message",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Message ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/relay": {
+            "post": {
+                "description": "Accepts a signed encrypted message and stores it in the relay for the intended recipient.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Relay"
+                ],
+                "summary": "Relay a signed encrypted message",
+                "parameters": [
+                    {
+                        "description": "Signed encrypted message",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.RelayRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.Contact": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "fingerprint": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "publicKey": {
+                    "type": "string"
+                },
+                "signingPublicKey": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ContactRequest": {
+            "type": "object",
+            "properties": {
+                "publicKey": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Identity": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "publicKey": {
+                    "type": "string"
+                },
+                "signingPublicKey": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Message": {
+            "type": "object",
+            "properties": {
+                "algorithm": {
+                    "type": "string"
+                },
+                "ciphertext": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "delivered": {
+                    "type": "boolean"
+                },
+                "expiresAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "nonce": {
+                    "type": "string"
+                },
+                "publicKey": {
+                    "type": "string"
+                },
+                "receiverId": {
+                    "type": "string"
+                },
+                "senderId": {
+                    "type": "string"
+                },
+                "signature": {
+                    "type": "string"
+                },
+                "signingPublicKey": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.RelayRequest": {
+            "type": "object",
+            "properties": {
+                "algorithm": {
+                    "type": "string"
+                },
+                "ciphertext": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "expiresAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "nonce": {
+                    "type": "string"
+                },
+                "receiverId": {
+                    "type": "string"
+                },
+                "senderId": {
+                    "type": "string"
+                },
+                "signature": {
+                    "type": "string"
+                }
+            }
+        }
+    }
 }

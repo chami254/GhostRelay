@@ -1,4 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState,
+} from "react";
 
 import {
   ActivityIndicator,
@@ -36,43 +39,55 @@ type MyQRCodeNavigationProp =
 
 interface GhostRelayIdentity {
   publicKey: string;
-  fingerprint?: string;
+  signingPublicKey: string;
+  fingerprint: string;
 }
 
 export default function MyQRCodeScreen() {
   const navigation =
     useNavigation<MyQRCodeNavigationProp>();
 
-  const { identity: sessionIdentity } =
-    useAuth();
+  const {
+    identity: sessionIdentity,
+  } = useAuth();
 
   const [identity, setIdentity] =
-    useState<GhostRelayIdentity | null>(null);
+    useState<GhostRelayIdentity | null>(
+      null
+    );
 
   const [loading, setLoading] =
     useState(true);
 
   useEffect(() => {
-    loadIdentity();
-  }, []);
+    void loadIdentity();
+  }, [sessionIdentity]);
 
   const loadIdentity = async () => {
     try {
       setLoading(true);
 
-      if (!sessionIdentity?.publicKey) {
+      if (
+        !sessionIdentity?.publicKey ||
+        !sessionIdentity.fingerprint ||
+        !sessionIdentity.signingPublicKey
+      ) {
         throw new Error(
-          "No identity available for this session."
+          "Complete GhostRelay identity is unavailable for this session."
         );
       }
 
       setIdentity({
-        publicKey: sessionIdentity.publicKey.trim(),
+        publicKey:
+          sessionIdentity.publicKey.trim(),
+
+        signingPublicKey:
+          sessionIdentity.signingPublicKey.trim(),
 
         fingerprint:
-          typeof sessionIdentity.fingerprint === "string"
-            ? sessionIdentity.fingerprint
-            : undefined,
+          sessionIdentity.fingerprint
+            .trim()
+            .toUpperCase(),
       });
     } catch (error) {
       console.error(
@@ -82,7 +97,7 @@ export default function MyQRCodeScreen() {
 
       Alert.alert(
         "Identity Error",
-        "Unable to load your GhostRelay identity."
+        "Unable to load your complete GhostRelay identity."
       );
     } finally {
       setLoading(false);
@@ -90,32 +105,38 @@ export default function MyQRCodeScreen() {
   };
 
   /*
-   * The QR code contains ONLY public identity
-   * information.
+   * QR payload contains public identity only.
    *
-   * Never place a private key, session token,
-   * password, or other secret material inside
-   * the QR payload.
+   * No private key.
+   * No session token.
+   * No password.
    */
-
   const qrPayload = identity
     ? JSON.stringify({
         type: "ghostrelay-identity",
         version: 1,
         publicKey: identity.publicKey,
+        signingPublicKey:
+          identity.signingPublicKey,
+        fingerprint:
+          identity.fingerprint,
       })
     : "";
 
   if (loading) {
     return (
       <Screen>
-        <View style={styles.loadingContainer}>
+        <View
+          style={styles.loadingContainer}
+        >
           <ActivityIndicator
             size="large"
             color="#10D6B3"
           />
 
-          <Text style={styles.loadingText}>
+          <Text
+            style={styles.loadingText}
+          >
             Loading your identity...
           </Text>
         </View>
@@ -129,17 +150,25 @@ export default function MyQRCodeScreen() {
         <View style={styles.screen}>
           <Header
             title="My QR Code"
-            onBack={() => navigation.goBack()}
+            onBack={() =>
+              navigation.goBack()
+            }
           />
 
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorTitle}>
+          <View
+            style={styles.errorContainer}
+          >
+            <Text
+              style={styles.errorTitle}
+            >
               Identity Unavailable
             </Text>
 
-            <Text style={styles.errorText}>
-              GhostRelay could not load your public
-              identity. Please try again.
+            <Text
+              style={styles.errorText}
+            >
+              GhostRelay could not load your
+              complete public identity.
             </Text>
 
             <PrimaryButton
@@ -155,12 +184,16 @@ export default function MyQRCodeScreen() {
   return (
     <Screen>
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={
+          styles.scrollContent
+        }
         showsVerticalScrollIndicator={false}
       >
         <Header
           title="My QR Code"
-          onBack={() => navigation.goBack()}
+          onBack={() =>
+            navigation.goBack()
+          }
         />
 
         <View style={styles.content}>
@@ -168,13 +201,18 @@ export default function MyQRCodeScreen() {
             Your GhostRelay Identity
           </Text>
 
-          <Text style={styles.description}>
-            Let another GhostRelay user scan this code
-            to add you as a trusted contact.
+          <Text
+            style={styles.description}
+          >
+            Let another GhostRelay user scan
+            this code to add you as a trusted
+            contact.
           </Text>
 
           <Card>
-            <View style={styles.qrContainer}>
+            <View
+              style={styles.qrContainer}
+            >
               <QRCode
                 value={qrPayload}
                 size={240}
@@ -184,13 +222,16 @@ export default function MyQRCodeScreen() {
             </View>
 
             <Text style={styles.qrLabel}>
-              Scan this code to exchange identities
+              Scan this code to exchange
+              identities
             </Text>
           </Card>
 
           <Card>
-            <Text style={styles.sectionTitle}>
-              Public Key
+            <Text
+              style={styles.sectionTitle}
+            >
+              X25519 Public Key
             </Text>
 
             <Text
@@ -200,31 +241,49 @@ export default function MyQRCodeScreen() {
               {identity.publicKey}
             </Text>
 
-            {identity.fingerprint && (
-              <>
-                <Text style={styles.sectionTitle}>
-                  Fingerprint
-                </Text>
+            <Text
+              style={styles.sectionTitle}
+            >
+              Ed25519 Signing Public Key
+            </Text>
 
-                <Text
-                  style={styles.fingerprint}
-                  selectable
-                >
-                  {identity.fingerprint}
-                </Text>
-              </>
-            )}
+            <Text
+              style={styles.publicKey}
+              selectable
+            >
+              {identity.signingPublicKey}
+            </Text>
+
+            <Text
+              style={styles.sectionTitle}
+            >
+              Fingerprint
+            </Text>
+
+            <Text
+              style={styles.fingerprint}
+              selectable
+            >
+              {identity.fingerprint}
+            </Text>
           </Card>
 
-          <View style={styles.securityNotice}>
-            <Text style={styles.securityTitle}>
+          <View
+            style={styles.securityNotice}
+          >
+            <Text
+              style={styles.securityTitle}
+            >
               🔐 Public identity only
             </Text>
 
-            <Text style={styles.securityText}>
-              This QR code contains your public identity
-              information. Your private cryptographic
-              material is never included.
+            <Text
+              style={styles.securityText}
+            >
+              This QR code contains only public
+              identity information. Private
+              cryptographic material is never
+              included.
             </Text>
           </View>
         </View>

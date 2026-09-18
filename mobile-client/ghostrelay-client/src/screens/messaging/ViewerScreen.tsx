@@ -16,18 +16,20 @@ import {
   useRoute,
 } from "@react-navigation/native";
 
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type {
+  NativeStackNavigationProp,
+} from "@react-navigation/native-stack";
 
-import type { RouteProp } from "@react-navigation/native";
+import type {
+  RouteProp,
+} from "@react-navigation/native";
 
 import type {
   RootStackParamList,
 } from "../../navigation/types";
 
 import Screen from "../../components/Screen";
-
 import Header from "../../components/Header";
-
 import PrimaryButton from "../../components/PrimaryButton";
 
 import styles from "./ViewerScreen.styles";
@@ -37,18 +39,24 @@ import {
   deleteMessage,
 } from "../../api/messages";
 
-interface DecryptedMessage {
-  id?: string;
-  senderId: string;
-  ciphertext: string;
-  createdAt?: string;
-}
+import {
+  decrypt,
+  verifyMessage,
+} from "../../native/GhostRelay";
 
 type ViewerNavigationProp =
   NativeStackNavigationProp<RootStackParamList>;
 
 type ViewerRouteProp =
   RouteProp<RootStackParamList, "Viewer">;
+
+interface DecryptedMessage {
+  id: string;
+  senderId: string;
+  plaintext: string;
+  createdAt: string;
+  verified: boolean;
+}
 
 const SELF_DESTRUCT_SECONDS = 15;
 
@@ -59,27 +67,39 @@ export default function ViewerScreen() {
   const route =
     useRoute<ViewerRouteProp>();
 
-  const { messageId } = route.params;
+  const { messageId } =
+    route.params;
 
   const [message, setMessage] =
-    useState<DecryptedMessage | null>(null);
+    useState<DecryptedMessage | null>(
+      null
+    );
 
   const [remaining, setRemaining] =
-    useState(SELF_DESTRUCT_SECONDS);
+    useState(
+      SELF_DESTRUCT_SECONDS
+    );
 
   const [deleting, setDeleting] =
     useState(false);
 
   /*
-   * Prevent the timer, Delete Now button,
-   * and back button from deleting the same
-   * message multiple times.
+   * Prevent multiple delete requests from:
+   *
+   * - timer
+   * - Delete Now
+   * - back button
    */
   const deletionStarted =
     useRef(false);
 
-  const handleDelete = useCallback(
-    async () => {
+  /*
+   * --------------------------------------------------
+   * DELETE
+   * --------------------------------------------------
+   */
+  const handleDelete =
+    useCallback(async () => {
       if (deletionStarted.current) {
         return;
       }
@@ -88,26 +108,150 @@ export default function ViewerScreen() {
       setDeleting(true);
 
       try {
-        await deleteMessage(messageId);
+        await deleteMessage(
+          messageId
+        );
       } catch (error) {
         console.error(
           "MESSAGE DELETE ERROR:",
           error
         );
       } finally {
-        navigation.navigate("Expired");
+        navigation.navigate(
+          "Expired"
+        );
       }
-    },
-    [messageId, navigation]
-  );
+    }, [
+      messageId,
+      navigation,
+    ]);
 
+  /*
+   * --------------------------------------------------
+   * RETRIEVE → VERIFY → DECRYPT
+   * --------------------------------------------------
+   */
   useEffect(() => {
     let mounted = true;
 
     async function loadMessage() {
       try {
+        /*
+         * Retrieve encrypted message from
+         * the relay.
+         */
         const retrieved =
-          await getMessage(messageId);
+          await getMessage(
+            messageId
+          );
+
+        if (!mounted) {
+          return;
+        }
+
+        /*
+         * Ensure the message contains the fields
+         * required by the security protocol.
+         */
+        if (
+          !retrieved.id ||
+          !retrieved.senderId ||
+          !retrieved.ciphertext ||
+          !retrieved.nonce ||
+          !retrieved.signature ||
+          !retrieved.algorithm ||
+          !retrieved.createdAt ||
+          !retrieved.expiresAt
+        ) {
+          throw new Error(
+            "The retrieved message is missing required security fields."
+          );
+        }
+
+        /*
+         * ------------------------------------------------
+         * VERIFY SIGNATURE
+         * ------------------------------------------------
+         *
+         * IMPORTANT:
+         *
+         * The signed message must be reconstructed
+         * exactly as it was when ComposeScreen signed it.
+         *
+         * The signature itself is NOT included in the
+         * canonical object passed to Rust for verification.
+         */
+        const unsignedMessage = {
+          id: retrieved.id,
+          senderId:
+            retrieved.senderId,
+          receiverId:
+            retrieved.receiverId,
+          ciphertext:
+            retrieved.ciphertext,
+          nonce:
+            retrieved.nonce,
+          algorithm:
+            retrieved.algorithm,
+          createdAt:
+            retrieved.createdAt,
+          expiresAt:
+            retrieved.expiresAt,
+        };
+
+        const canonicalMessage =
+          JSON.stringify(
+            unsignedMessage
+          );
+
+        /*
+         * The sender's Ed25519 public key is required
+         * here.
+         */
+        if (
+          !retrieved.signingPublicKey
+        ) {
+          throw new Error(
+            "The sender signing public key is unavailable. The message cannot be cryptographically verified."
+          );
+        }
+
+        const verified =
+          await verifyMessage(
+            canonicalMessage,
+            retrieved.signingPublicKey
+          );
+
+        if (!verified) {
+          throw new Error(
+            "Message signature verification failed. The message will not be displayed."
+          );
+        }
+
+        /*
+         * ------------------------------------------------
+         * DECRYPT
+         * ------------------------------------------------
+         *
+         * Verification succeeds first.
+         *
+         * Only then do we ask Rust to decrypt the
+         * ciphertext using the active recipient identity.
+         */
+        if (
+          !retrieved.publicKey
+        ) {
+          throw new Error(
+            "The sender encryption public key is unavailable. The message cannot be decrypted."
+          );
+        }
+
+        const plaintext =
+          await decrypt(
+            retrieved.publicKey,
+            retrieved.ciphertext,
+            retrieved.nonce
+          );
 
         if (!mounted) {
           return;
@@ -115,9 +259,12 @@ export default function ViewerScreen() {
 
         setMessage({
           id: retrieved.id,
-          senderId: retrieved.senderId,
-          ciphertext: retrieved.ciphertext,
-          createdAt: retrieved.createdAt,
+          senderId:
+            retrieved.senderId,
+          plaintext,
+          createdAt:
+            retrieved.createdAt,
+          verified: true,
         });
 
         setRemaining(
@@ -134,8 +281,10 @@ export default function ViewerScreen() {
         }
 
         Alert.alert(
-          "Unable to retrieve message.",
-          "The message could not be retrieved from the relay.",
+          "Unable to open message",
+          error instanceof Error
+            ? error.message
+            : "The encrypted message could not be verified or decrypted.",
           [
             {
               text: "OK",
@@ -152,38 +301,64 @@ export default function ViewerScreen() {
     return () => {
       mounted = false;
     };
-  }, [messageId, navigation]);
+  }, [
+    messageId,
+    navigation,
+  ]);
 
+  /*
+   * --------------------------------------------------
+   * SELF-DESTRUCT TIMER
+   * --------------------------------------------------
+   */
   useEffect(() => {
     if (!message || deleting) {
       return;
     }
 
-    const timer = setInterval(() => {
-      setRemaining((previous) => {
-        if (previous <= 1) {
-          clearInterval(timer);
+    const timer =
+      setInterval(() => {
+        setRemaining(
+          (previous) => {
+            if (previous <= 1) {
+              clearInterval(timer);
+              void handleDelete();
+              return 0;
+            }
 
-          void handleDelete();
-
-          return 0;
-        }
-
-        return previous - 1;
-      });
-    }, 1000);
+            return previous - 1;
+          }
+        );
+      }, 1000);
 
     return () => {
       clearInterval(timer);
     };
-  }, [message, deleting, handleDelete]);
+  }, [
+    message,
+    deleting,
+    handleDelete,
+  ]);
 
+  /*
+   * --------------------------------------------------
+   * LOADING / SECURITY PROCESSING
+   * --------------------------------------------------
+   */
   if (!message) {
     return (
       <Screen>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>
-            Decrypting...
+        <View
+          style={
+            styles.loadingContainer
+          }
+        >
+          <Text
+            style={
+              styles.loadingText
+            }
+          >
+            Verifying and decrypting...
           </Text>
         </View>
       </Screen>
@@ -201,7 +376,12 @@ export default function ViewerScreen() {
         />
 
         <View style={styles.container}>
-          <View style={styles.identityCard}>
+          {/* SENDER */}
+          <View
+            style={
+              styles.identityCard
+            }
+          >
             <Text style={styles.from}>
               From
             </Text>
@@ -213,30 +393,61 @@ export default function ViewerScreen() {
               {message.senderId}
             </Text>
 
-            <Text style={styles.verified}>
-              🛡 Fingerprint Verified
-            </Text>
+            {message.verified && (
+              <Text
+                style={
+                  styles.verified
+                }
+              >
+                🛡 Signature Verified
+              </Text>
+            )}
           </View>
 
-          <View style={styles.warningCard}>
-            <Text style={styles.warning}>
+          {/* WARNING */}
+          <View
+            style={
+              styles.warningCard
+            }
+          >
+            <Text
+              style={styles.warning}
+            >
               This message will permanently
               disappear after viewing.
             </Text>
           </View>
 
-          <View style={styles.messageCard}>
-            <Text style={styles.message}>
-              {message.ciphertext}
+          {/* PLAINTEXT */}
+          <View
+            style={
+              styles.messageCard
+            }
+          >
+            <Text
+              style={styles.message}
+            >
+              {message.plaintext}
             </Text>
           </View>
 
-          <View style={styles.timerCard}>
-            <Text style={styles.timerLabel}>
+          {/* TIMER */}
+          <View
+            style={
+              styles.timerCard
+            }
+          >
+            <Text
+              style={
+                styles.timerLabel
+              }
+            >
               Self Destruct
             </Text>
 
-            <Text style={styles.timer}>
+            <Text
+              style={styles.timer}
+            >
               00:
               {remaining
                 .toString()
@@ -244,6 +455,7 @@ export default function ViewerScreen() {
             </Text>
           </View>
 
+          {/* DELETE */}
           <PrimaryButton
             title={
               deleting

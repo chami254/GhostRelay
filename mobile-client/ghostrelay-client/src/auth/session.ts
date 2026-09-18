@@ -5,6 +5,7 @@ import * as Crypto from "expo-crypto";
 export interface Identity {
   publicKey: string;
   fingerprint: string;
+  signingPublicKey?: string;
 }
 
 export interface Session {

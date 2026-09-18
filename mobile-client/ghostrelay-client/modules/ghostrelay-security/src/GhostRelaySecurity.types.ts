@@ -6,6 +6,11 @@ export type Identity = {
   fingerprint: string;
 };
 
+export type EncryptionResult = {
+  ciphertext: string;
+  nonce: string;
+};
+
 export type AuthenticationResult = {
   authenticated: boolean;
   method: 'biometric' | 'failed' | 'error' | 'unavailable';
